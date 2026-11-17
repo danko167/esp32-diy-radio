@@ -1,0 +1,5 @@
+{
+    // Re-indexing on every platformio.ini change also rewrites .gitignore with
+    // PlatformIO's defaults. Run "PlatformIO: Rebuild IntelliSense Index" by hand instead.
+    "platformio-ide.autoRebuildAutocompleteIndex": false
+}

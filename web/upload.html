@@ -1,0 +1,1122 @@
+<!doctype html>
+<!-- The radio's upload page (design: design/src/web/UploadSite.tsx). The radio
+     serves it gzipped (tools/embed_web.py), so it stays one small plain file.
+     The browser crops and converts pictures to the radio's 480 x 480 RGB565;
+     the radio only stores them. API: src/net/upload_server.cpp -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DIY Radio</title>
+<style>
+:root { --bg: #000; --surface: #161618; --surface-hi: #26262b; --text: #ededed; --text-dim: #8a8a90; --accent: #5ac8fa; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 920px; margin: 0 auto; padding: 0 32px 48px; }
+h2 { font-size: 22px; font-weight: 500; margin: 0; }
+.dim { color: var(--text-dim); font-size: 14px; }
+header { display: flex; align-items: center; justify-content: space-between; padding: 24px 0; margin-bottom: 16px; border-bottom: 1px solid var(--surface-hi); }
+.logo { font-size: 22px; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #30d158; margin-right: 4px; }
+section { display: flex; flex-direction: column; gap: 14px; margin-top: 28px; }
+.row { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.storage { height: 6px; border-radius: 3px; background: var(--surface-hi); overflow: hidden; }
+.storage span { display: block; height: 100%; background: var(--accent); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 16px; }
+figure { margin: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; min-width: 0; }
+figure > span { position: relative; aspect-ratio: 1; border: 1px solid var(--surface-hi); border-radius: 16px; overflow: hidden; background: #000 center / cover; }
+figure.current > span { border: 3px solid var(--accent); }
+figcaption { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.add { cursor: pointer; color: var(--text-dim); }
+.add figure > span { display: flex; align-items: center; justify-content: center; border-style: dashed; font-size: 32px; background: none; }
+.add:hover figure > span { border-color: var(--accent); color: var(--accent); }
+.x { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; border: 0; border-radius: 50%; background: rgba(0, 0, 0, .6); color: var(--text); cursor: pointer; font-size: 16px; line-height: 28px; padding: 0; }
+.x:hover { background: #ff453a; }
+.lock { display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 80px 0; text-align: center; }
+.code { width: 220px; padding: 12px; border: 2px solid var(--surface-hi); border-radius: 16px; background: var(--surface); color: var(--text); font: inherit; font-size: 40px; letter-spacing: 16px; text-align: center; }
+.code:focus, input:focus { outline: none; border-color: var(--accent); }
+button.primary, button.secondary { height: 44px; padding: 0 22px; border: 0; border-radius: 22px; font: inherit; cursor: pointer; }
+.primary { background: var(--accent); color: var(--bg); }
+.primary:disabled { opacity: .4; cursor: default; }
+.secondary { background: var(--surface-hi); color: var(--text); }
+.panel { padding: 24px; border-radius: 24px; background: var(--surface); }
+.crop-body { display: flex; gap: 40px; flex-wrap: wrap; }
+.frame { width: 360px; height: 360px; overflow: hidden; border-radius: 16px; cursor: grab; touch-action: none; position: relative; background: #000; }
+.frame:active { cursor: grabbing; }
+.frame img { position: absolute; left: 0; top: 0; user-select: none; -webkit-user-drag: none; }
+.zoom { display: flex; align-items: center; gap: 12px; margin-top: 14px; color: var(--text-dim); }
+.zoom input { flex: 1; accent-color: var(--accent); }
+.preview { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.preview canvas { width: 360px; height: 360px; border-radius: 18px; box-shadow: 0 0 0 6px #050505; }
+.actions { display: flex; align-items: center; justify-content: flex-end; gap: 12px; flex-wrap: wrap; }
+label.name { margin-right: auto; display: flex; align-items: center; gap: 10px; color: var(--text-dim); }
+input.text { height: 40px; padding: 0 12px; border: 1px solid var(--surface-hi); border-radius: 12px; background: var(--bg); color: var(--text); font: inherit; }
+.progress { position: relative; width: 260px; height: 10px; border-radius: 5px; background: var(--surface-hi); }
+.progress span { display: block; height: 100%; border-radius: 5px; background: var(--accent); }
+.progress em { position: absolute; right: 0; top: 14px; color: var(--text-dim); font-size: 13px; font-style: normal; }
+.warn { color: #ff453a; font-size: 14px; margin: 0; }
+.stations { display: flex; flex-direction: column; border-radius: 20px; background: var(--surface); padding: 4px 18px; }
+.station { display: flex; align-items: center; gap: 14px; min-height: 60px; border-bottom: 1px solid var(--surface-hi); }
+.station:last-child { border-bottom: 0; }
+.station .n { width: 32px; color: var(--text-dim); font-size: 14px; }
+.station .t { flex: 1; min-width: 0; }
+.station .t div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.station .x { position: static; flex: none; }
+.recordings { display: flex; flex-direction: column; gap: 8px; }
+.recording { display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: 16px; padding: 10px 14px; border-radius: 14px; background: var(--surface); }
+.recording .x { position: static; }
+a.secondary { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px; border-radius: 18px; text-decoration: none; font-size: 14px; }
+.add-station { display: flex; gap: 10px; flex-wrap: wrap; }
+.add-station .text { flex: 1; min-width: 160px; }
+.add-station .url { flex: 2; }
+figure canvas { display: block; width: 100%; height: 100%; }
+.edit { cursor: pointer; }
+.edit:hover { border-color: var(--accent) !important; }
+.fe-canvas { width: 360px; height: 360px; flex: none; border-radius: 18px; box-shadow: 0 0 0 6px #050505; touch-action: none; cursor: grab; }
+.fe-panel { flex: 1; min-width: 320px; display: flex; flex-direction: column; gap: 18px; }
+.group { display: flex; flex-direction: column; gap: 10px; }
+.group-title { display: flex; justify-content: space-between; align-items: center; color: var(--accent); font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips > * { height: 36px; padding: 0 14px; display: flex; align-items: center; gap: 8px; border: 1px solid var(--surface-hi); border-radius: 18px; background: var(--bg); color: var(--text); font: inherit; font-size: 14px; cursor: pointer; }
+.chips .on { border-color: var(--accent); color: var(--accent); }
+.chips .more { border-style: dashed; color: var(--text-dim); }
+input[type=color] { width: 30px; height: 30px; padding: 0; border: 0; background: none; cursor: pointer; }
+.chips input[type=color] { width: 22px; height: 22px; }
+.remove { border: 0; background: none; color: #ff453a; font: inherit; font-size: 13px; cursor: pointer; }
+.field { display: grid; grid-template-columns: 120px 1fr; align-items: center; gap: 12px; color: var(--text-dim); font-size: 14px; }
+.field input[type=range], .toggle input { accent-color: var(--accent); }
+.field select, .field .text { height: 36px; font-size: 14px; }
+select { padding: 0 10px; border: 1px solid var(--surface-hi); border-radius: 10px; background: var(--bg); color: var(--text); font: inherit; }
+.toggle { display: flex; align-items: center; gap: 10px; color: var(--text-dim); font-size: 14px; }
+.swatches { display: flex; align-items: center; gap: 8px; }
+.swatches button { width: 26px; height: 26px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; }
+.swatches .on { outline: 2px solid var(--text); outline-offset: 2px; }
+.upload { color: var(--accent); font-size: 14px; cursor: pointer; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <header><span class="logo">DIY Radio</span><span class="dim" id="where"></span></header>
+
+  <div class="lock" id="lock">
+    <h2>Type the code from the radio's screen</h2>
+    <input class="code" id="code" inputmode="numeric" maxlength="4" placeholder="····" autocomplete="off">
+    <button class="primary" id="connect" disabled>Connect</button>
+    <p class="warn" id="lockError" hidden></p>
+    <p class="dim">It's on the radio under Settings › Display › Your picture.</p>
+  </div>
+
+  <div id="app" hidden>
+    <section>
+      <div class="row">
+        <h2>Wallpapers on the radio</h2>
+        <span class="dim" id="space"></span>
+      </div>
+      <div class="storage"><span id="used"></span></div>
+      <div class="grid" id="walls"></div>
+      <p class="warn" id="noCard" hidden>There's no microSD card in the radio: pictures need one.</p>
+    </section>
+
+    <section class="panel" id="crop" hidden>
+      <div class="row"><h2>Frame it</h2><span class="dim" id="cropFile"></span></div>
+      <div class="crop-body">
+        <div>
+          <div class="frame" id="frame"><img id="photo" alt="" draggable="false"></div>
+          <label class="zoom">−<input type="range" id="zoom" min="1" max="3" step="0.01" value="1">+</label>
+        </div>
+        <div class="preview"><canvas id="preview" width="480" height="480"></canvas><span class="dim">How Home will look</span></div>
+      </div>
+      <div class="actions">
+        <label class="name">Name <input class="text" id="picName" maxlength="24"></label>
+        <span id="cropButtons">
+          <button class="secondary" id="cancel">Cancel</button>
+          <button class="primary" id="send">Send to the radio</button>
+        </span>
+        <div class="progress" id="progress" hidden><span id="bar"></span><em id="percent"></em></div>
+      </div>
+      <p class="warn" id="cropError" hidden></p>
+    </section>
+
+    <section>
+      <div class="row"><h2>Clock faces</h2><span class="dim">Pick one on the radio in Settings › Clock screen › Face</span></div>
+      <div class="grid" id="faces"></div>
+      <p class="warn" id="facesError" hidden></p>
+    </section>
+
+    <section class="panel" id="editor" hidden>
+      <div class="row"><h2 id="feTitle"></h2><span class="dim">Drag the pieces into place; pick one to style it</span></div>
+      <div class="crop-body">
+        <canvas class="fe-canvas" id="feCanvas" width="480" height="480"></canvas>
+        <div class="fe-panel">
+          <div class="group">
+            <div class="group-title">Background</div>
+            <div class="chips" id="feBg"></div>
+            <p class="warn" id="feBright" hidden>A bright face: lit all night it uses more battery and wears the screen. A dark background is kinder; the radio also dims it with the clock screen brightness.</p>
+          </div>
+          <div class="group">
+            <div class="group-title">Pieces</div>
+            <div class="chips" id="feList"></div>
+          </div>
+          <div class="group" id="feProps"></div>
+        </div>
+      </div>
+      <div class="actions">
+        <label class="name">Name <input class="text" id="feName" maxlength="24"></label>
+        <span id="feButtons">
+          <button class="secondary" id="feCancel">Cancel</button>
+          <button class="primary" id="feSend">Send to the radio</button>
+        </span>
+        <div class="progress" id="feProgress" hidden><span id="febar"></span><em id="fepercent"></em></div>
+      </div>
+      <p class="warn" id="feError" hidden></p>
+    </section>
+
+    <section>
+      <div class="row"><h2>Recordings</h2><span class="dim">From the radio's Recorder, as WAV files</span></div>
+      <div class="recordings" id="recordings"></div>
+      <p class="warn" id="recError" hidden></p>
+    </section>
+
+    <section>
+      <div class="row"><h2>Favourite stations</h2><span class="dim">They're the ★ list in Internet Radio</span></div>
+      <div class="stations" id="stations"></div>
+      <div class="add-station">
+        <input class="text" id="stName" placeholder="Name" maxlength="40">
+        <input class="text url" id="stUrl" placeholder="Stream address: http://…">
+        <button class="primary" id="stAdd">Add</button>
+      </div>
+      <p class="warn" id="stError" hidden></p>
+    </section>
+  </div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id)
+const RADIO = 480, THUMB = 208, CROP = 360  // THUMB: wallpaper::kThumbSize
+let code = '', info = null
+
+function show(el, on) { el.hidden = !on }
+function fail(el, text) { el.textContent = text; show(el, !!text) }
+const q = (path, extra = '') => `${path}?c=${code}${extra}`
+
+async function api(path, options = {}, extra = '') {
+  const r = await fetch(q(path, extra), options)
+  if (r.status === 403) { lock(await r.text()); throw new Error('locked') }
+  if (!r.ok) throw new Error(await r.text())
+  return r.json()
+}
+
+function lock(why) {
+  show($('app'), false); show($('lock'), true)
+  $('where').textContent = location.host
+  fail($('lockError'), why)
+}
+
+async function connect() {
+  code = $('code').value
+  try {
+    info = await api('/api/info')
+  } catch (e) {
+    if (e.message !== 'locked') fail($('lockError'), "Can't reach the radio: is the upload page still on there?")
+    return
+  }
+  show($('lock'), false); show($('app'), true); fail($('lockError'), '')
+  $('where').innerHTML = '<span class="dot"></span> Connected to ' + location.host
+  render()
+  loadFaces()
+  loadRecordings()
+}
+
+$('code').addEventListener('input', (e) => {
+  e.target.value = e.target.value.replace(/\D/g, '')
+  $('connect').disabled = e.target.value.length < 4
+  if (e.target.value.length === 4) connect()
+})
+$('connect').onclick = connect
+
+async function refresh() { info = await api('/api/info'); render() }
+
+// One at a time: the radio serves one request after another, and each open
+// connection takes memory it has little of. Loaded ones are kept.
+const thumbs = new Map()
+let thumbQueue = Promise.resolve()
+function loadThumb(el, url) {
+  const show = (blob) => { el.style.backgroundImage = `url("${blob}")` }
+  if (thumbs.has(url)) return show(thumbs.get(url))
+  thumbQueue = thumbQueue.then(async () => {
+    try {
+      const r = await fetch(url)
+      if (!r.ok) return
+      thumbs.set(url, URL.createObjectURL(await r.blob()))
+      show(thumbs.get(url))
+    } catch (e) {}
+  })
+}
+
+function render() {
+  if (info.accent) document.documentElement.style.setProperty('--accent', info.accent)
+  const mb = (b) => (b / 1048576).toFixed(b < 10485760 ? 1 : 0)
+  if (info.card) {
+    const room = Math.floor(info.free / info.pictureBytes)
+    $('space').textContent = `${mb(info.total - info.free)} of ${mb(info.total)} MB used · room for ${room} more`
+    $('used').style.width = `${(1 - info.free / info.total) * 100}%`
+  } else {
+    $('space').textContent = ''
+  }
+  show($('noCard'), !info.card)
+
+  const walls = $('walls')
+  walls.textContent = ''
+  info.wallpapers.forEach((w, i) => {
+    const fig = document.createElement('figure')
+    if (i === info.current) fig.className = 'current'
+    const pic = document.createElement('span')
+    loadThumb(pic, q('/api/thumb', `&i=${i}&v=${w.id || 0}`))
+    if (w.id) {
+      const x = document.createElement('button')
+      x.className = 'x'; x.title = 'Delete from the radio'; x.textContent = '×'
+      x.onclick = async () => {
+        if (!confirm(`Delete “${w.name}” from the radio?`)) return
+        await api('/api/delete', { method: 'POST', body: new URLSearchParams({ id: w.id }) }).catch(alert)
+        refresh()
+      }
+      pic.append(x)
+    }
+    const cap = document.createElement('figcaption')
+    cap.textContent = w.name
+    if (!w.id) cap.insertAdjacentHTML('beforeend', ' <span class="dim">· built in</span>')
+    fig.append(pic, cap)
+    walls.append(fig)
+  })
+  if (info.card) {
+    const add = document.createElement('label')
+    add.className = 'add'
+    add.innerHTML = '<figure><span>+</span><figcaption>Add a picture</figcaption></figure><input type="file" accept="image/*" hidden>'
+    add.querySelector('input').onchange = (e) => e.target.files[0] && pick(e.target.files[0])
+    walls.append(add)
+  }
+
+  const list = $('stations')
+  list.textContent = ''
+  if (!info.stations.length) list.innerHTML = '<div class="station dim">None yet</div>'
+  info.stations.forEach((s, i) => {
+    const row = document.createElement('div')
+    row.className = 'station'
+    row.innerHTML = `<span class="n">${i + 1}</span><div class="t"><div></div><div class="dim"></div></div>`
+    row.querySelector('.t div').textContent = s.name
+    row.querySelector('.t .dim').textContent = s.url
+    const x = document.createElement('button')
+    x.className = 'x'; x.title = 'Remove'; x.textContent = '×'
+    x.onclick = () => saveStations(info.stations.filter((_, j) => j !== i))
+    row.append(x)
+    list.append(row)
+  })
+}
+
+async function saveStations(list) {
+  fail($('stError'), '')
+  try {
+    await api('/api/stations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(list) })
+    await refresh()
+    return true
+  } catch (e) {
+    if (e.message !== 'locked') fail($('stError'), e.message)
+    return false
+  }
+}
+
+$('stAdd').onclick = async () => {
+  const name = $('stName').value.trim(), url = $('stUrl').value.trim()
+  if (!name || !/^https?:\/\//.test(url)) return fail($('stError'), 'A name, and an address starting with http:// or https://')
+  if (await saveStations([...info.stations, { name, url }])) { $('stName').value = ''; $('stUrl').value = '' }
+}
+
+// ----- Recordings: download (a link to the WAV) or delete -----
+
+// "Tue 3 Nov, 15:42", from the name (20261103-154412-voice.wav)
+function recordingTitle(name) {
+  const n = (from, count) => +name.substr(from, count)
+  const d = new Date(n(0, 4), n(4, 2) - 1, n(6, 2), n(9, 2), n(11, 2))
+  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).replace(',', '') +
+    ', ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+const duration = (s) => s >= 3600
+  ? `${Math.floor(s / 3600)}:${String(Math.floor(s / 60) % 60).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
+  : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+const size = (b) => b >= 1073741824 ? `${(b / 1073741824).toFixed(1)} GB`
+  : b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.round(b / 1024)} KB`
+
+async function loadRecordings() {
+  const list = $('recordings')
+  let got
+  try {
+    got = await api('/api/recordings')
+  } catch (e) {
+    if (e.message !== 'locked') fail($('recError'), e.message)
+    return
+  }
+  fail($('recError'), '')
+  list.textContent = ''
+  if (!got.recordings.length) {
+    list.innerHTML = `<p class="dim">${got.card ? 'Nothing recorded yet.' : "There's no microSD card in the radio: recordings need one."}</p>`
+    return
+  }
+  for (const r of got.recordings) {
+    const row = document.createElement('div')
+    row.className = 'recording'
+    row.innerHTML = '<span></span><span class="dim"></span>'
+    row.children[0].textContent = recordingTitle(r.name)
+    row.children[1].textContent = `${duration(r.seconds)} · ${size(r.bytes)}`
+    const a = document.createElement('a')
+    a.className = 'secondary'
+    a.href = q('/api/recording', `&f=${encodeURIComponent(r.name)}`)
+    a.download = r.name
+    a.textContent = '↓ Download'
+    const x = document.createElement('button')
+    x.className = 'x'; x.title = 'Delete from the radio'; x.textContent = '×'
+    x.onclick = async () => {
+      if (!confirm(`Delete the recording of ${recordingTitle(r.name)} from the radio?`)) return
+      await api('/api/recording/delete', { method: 'POST', body: new URLSearchParams({ f: r.name }) })
+        .catch((e) => e.message !== 'locked' && alert(e.message))
+      loadRecordings()
+    }
+    row.append(a, x)
+    list.append(row)
+  }
+}
+
+// ----- Framing: drag to move, slider to zoom; the picture always covers the square -----
+
+let img = null, cover = 1, zoom = 1, pos = { x: 0, y: 0 }, drag = null, cropForFace = false
+
+// forFace: framing a clock face's background, for the face editor
+function pick(file, forFace = false) {
+  cropForFace = forFace
+  const url = URL.createObjectURL(file)
+  img = new Image()
+  img.onload = () => {
+    cover = CROP / Math.min(img.naturalWidth, img.naturalHeight)
+    $('zoom').value = zoom = 1
+    const s = sizeOf()
+    pos = { x: (CROP - s.w) / 2, y: (CROP - s.h) / 2 }
+    $('photo').src = url
+    $('cropFile').textContent = `${file.name} · drag to move, slide to zoom`
+    $('picName').value = file.name.replace(/\.[^.]+$/, '').slice(0, 24)
+    show($('crop'), true); show($('cropButtons'), true); show($('progress'), false); fail($('cropError'), '')
+    show($('picName').parentNode, !forFace)
+    $('send').textContent = forFace ? 'Use it' : 'Send to the radio'
+    $('preview').nextSibling.textContent = forFace ? 'How the face will look' : 'How Home will look'
+    $('send').disabled = !forFace && (!info.card || info.free < info.pictureBytes)
+    if ($('send').disabled) fail($('cropError'), info.card ? 'The card is full: delete a picture first.' : 'There is no microSD card in the radio.')
+    place()
+    $('crop').scrollIntoView({ behavior: 'smooth' })
+  }
+  img.src = url
+}
+
+function sizeOf(z = zoom) {
+  return { w: img.naturalWidth * cover * z, h: img.naturalHeight * cover * z }
+}
+
+function place() {
+  const s = sizeOf()
+  pos.x = Math.min(0, Math.max(CROP - s.w, pos.x))
+  pos.y = Math.min(0, Math.max(CROP - s.h, pos.y))
+  Object.assign($('photo').style, { width: `${s.w}px`, height: `${s.h}px`, transform: `translate(${pos.x}px, ${pos.y}px)` })
+  drawPreview()
+}
+
+$('zoom').oninput = () => {
+  // Around the middle of the square: what's there stays there
+  const k = Number($('zoom').value) / zoom
+  pos.x = CROP / 2 - (CROP / 2 - pos.x) * k
+  pos.y = CROP / 2 - (CROP / 2 - pos.y) * k
+  zoom = Number($('zoom').value)
+  place()
+}
+$('frame').onpointerdown = (e) => { $('frame').setPointerCapture(e.pointerId); drag = { px: e.clientX, py: e.clientY, x: pos.x, y: pos.y } }
+$('frame').onpointermove = (e) => { if (drag) { pos.x = drag.x + e.clientX - drag.px; pos.y = drag.y + e.clientY - drag.py; place() } }
+$('frame').onpointerup = () => { drag = null }
+$('cancel').onclick = () => { show($('crop'), false); if (cropForFace) $('editor').scrollIntoView({ behavior: 'smooth' }) }
+
+// The framed picture at the radio's size
+function framed(size) {
+  const c = document.createElement('canvas')
+  c.width = c.height = size
+  const g = c.getContext('2d')
+  const k = size / CROP, s = sizeOf()
+  g.imageSmoothingQuality = 'high'
+  g.drawImage(img, pos.x * k, pos.y * k, s.w * k, s.h * k)
+  return c
+}
+
+// A rough Home on top, to judge the picture with (the real one: screen_home.cpp)
+function drawPreview() {
+  const c = $('preview'), g = c.getContext('2d')
+  g.clearRect(0, 0, RADIO, RADIO)
+  if (cropForFace) return drawFace(c, ed.face, framed(RADIO))
+  g.drawImage(framed(RADIO), 0, 0)
+  const now = new Date()
+  g.fillStyle = '#ededed'; g.textAlign = 'center'
+  g.font = '500 96px system-ui, sans-serif'
+  g.fillText(`${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`, RADIO / 2, 165)
+  g.font = '20px system-ui, sans-serif'; g.fillStyle = '#c8c8cc'
+  g.fillText(now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }), RADIO / 2, 202)
+  for (let i = 0; i < 3; i++) {
+    g.fillStyle = 'rgba(22, 22, 24, .55)'
+    g.beginPath(); g.roundRect(12 + i * 156, 310, 144, 130, 20); g.fill()
+  }
+}
+
+// RGB565 as the radio draws it, little-endian, with the radio's 4x4 dither
+const BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]
+function rgb565(canvas, out, offset) {
+  const n = canvas.width, d = canvas.getContext('2d').getImageData(0, 0, n, n).data
+  const v = new DataView(out, offset, n * n * 2)
+  for (let y = 0, p = 0; y < n; y++) {
+    for (let x = 0; x < n; x++, p += 4) {
+      const t = (BAYER[y & 3][x & 3] + 0.5) / 16
+      const r = Math.min(31, Math.floor(d[p] / 255 * 31 + t))
+      const gg = Math.min(63, Math.floor(d[p + 1] / 255 * 63 + t))
+      const b = Math.min(31, Math.floor(d[p + 2] / 255 * 31 + t))
+      v.setUint16((y * n + x) * 2, (r << 11) | (gg << 5) | b, true)
+    }
+  }
+}
+
+// An upload, with the code and what it is in headers: the radio reads them
+// before the body. Resolves with the reply; 403 locks the page.
+function post(path, headers, body, progress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', path)
+    xhr.setRequestHeader('X-Code', code)
+    for (const h in headers) xhr.setRequestHeader(h, headers[h])
+    xhr.upload.onprogress = (e) => progress(e.loaded)
+    xhr.onload = () => {
+      if (xhr.status === 200) return resolve(xhr.responseText)
+      if (xhr.status === 403) lock(xhr.responseText)
+      reject(new Error(xhr.status === 403 ? 'locked' : xhr.responseText || 'The radio didn’t take it'))
+    }
+    xhr.onerror = () => reject(new Error('The transfer was cut, maybe from the radio. Send it again?'))
+    xhr.send(body)
+  })
+}
+
+function bar(prefix, p) {
+  p = Math.round(p * 100)
+  $(prefix + 'bar').style.width = `${p}%`; $(prefix + 'percent').textContent = `${p}%`
+}
+
+$('send').onclick = async () => {
+  const full = framed(RADIO)
+  if (cropForFace) return useFaceBg(full)
+  const thumb = document.createElement('canvas')
+  thumb.width = thumb.height = THUMB
+  const tg = thumb.getContext('2d')
+  tg.imageSmoothingQuality = 'high'
+  tg.drawImage(full, 0, 0, THUMB, THUMB)
+  const body = new ArrayBuffer((THUMB * THUMB + RADIO * RADIO) * 2)
+  rgb565(thumb, body, 0)
+  rgb565(full, body, THUMB * THUMB * 2)
+
+  show($('cropButtons'), false); show($('progress'), true); fail($('cropError'), '')
+  try {
+    await post('/api/picture', { 'X-Name': encodeURIComponent($('picName').value || 'Picture') }, body,
+               (n) => bar('', n / body.byteLength))
+    show($('crop'), false); refresh()
+  } catch (e) {
+    show($('cropButtons'), true); show($('progress'), false)
+    if (e.message !== 'locked') fail($('cropError'), e.message)
+  }
+}
+// ----- Clock faces: a face file (design/src/faceFile.ts) drawn as the radio's
+// face renderer does (design/src/screens/CustomFace.tsx): the background, then
+// each element. The mockup's moment: Sunday 1 November, 17:42:05, alarm 07:30,
+// 12° and partly cloudy. Coordinates are the radio's 480 px; x is the
+// alignment point (left edge, centre or right edge), y the top.
+
+const SANS = 'system-ui, -apple-system, "Segoe UI", sans-serif'
+const UI = { clock140: 140, clock96: 96, ui50: 50, ui30: 30, ui22: 22, ui20: 20 }
+const DATES = { long: 'Sunday, 1 November', short: 'Sun 1 Nov', day: 'Sunday', date: '1 November', numeric: '1. 11.' }
+const NAMES = { time: 'Time', date: 'Date', alarm: 'Alarm', weather: 'Weather', text: 'Text', analog: 'Analog clock' }
+const accent = () => getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#5ac8fa'
+const colourOf = (c) => c === 'accent' ? accent() : c === 'text' ? '#ededed' : c === 'dim' ? '#8a8a90' : c
+// An uploaded font's family is its file name without the size: Bebas_120.bin is Bebas
+const familyOf = (file) => file.replace(/(_\d+)?\.bin$/, '')
+
+// The canvas font, and the height of the element's line box: a built-in font's
+// as the radio's line height, an uploaded one's from its ascent and descent
+// (what the converted font says, see binFont)
+function fontOf(f) {
+  if (typeof f === 'object') return { css: `${f.size}px "${familyOf(f.file)}", ${SANS}`, box: 0 }
+  const clock = f.startsWith('clock')
+  return { css: `${clock ? 600 : 400} ${UI[f]}px ${SANS}`, box: UI[f] * (clock ? 0.85 : 1.25) }
+}
+
+const textOf = (e) => ({ time: '17:42', date: DATES[e.format], alarm: '07:30', text: e.text,
+                         weather: e.words ? '12°  Partly cloudy' : '12°' })[e.kind]
+
+// The bell and the weather icon: simple shapes, size s, left edge x, centre y
+function icon(g, kind, x, y, s) {
+  g.beginPath()
+  if (kind === 'alarm') {
+    g.arc(x + s / 2, y - s * .08, s * .3, Math.PI, 0)
+    g.lineTo(x + s * .85, y + s * .25); g.lineTo(x + s * .15, y + s * .25); g.closePath()
+    g.moveTo(x + s * .62, y + s * .32); g.arc(x + s / 2, y + s * .32, s * .12, 0, Math.PI)
+  } else {
+    g.arc(x + s * .62, y - s * .12, s * .22, 0, 2 * Math.PI)
+    g.fill(); g.globalAlpha = .7; g.beginPath()
+    g.arc(x + s * .32, y + s * .12, s * .22, Math.PI / 2, Math.PI * 1.5)
+    g.arc(x + s * .55, y - s * .02, s * .26, Math.PI, 0)
+    g.arc(x + s * .78, y + s * .14, s * .2, Math.PI * 1.5, Math.PI / 2)
+    g.closePath()
+  }
+  g.fill(); g.globalAlpha = 1
+}
+
+function drawAnalog(g, e) {
+  const line = (angle, from, to, width, colour) => {
+    const a = (angle - 90) * Math.PI / 180, c = Math.cos(a), s = Math.sin(a)
+    g.strokeStyle = colourOf(colour); g.lineWidth = width; g.lineCap = 'round'
+    g.beginPath(); g.moveTo(e.cx + from * c, e.cy + from * s); g.lineTo(e.cx + to * c, e.cy + to * s); g.stroke()
+  }
+  const count = { none: 0, quarters: 4, hours: 12, minutes: 60 }[e.ticks]
+  for (let i = 0; i < count; i++) {
+    const angle = i * 360 / count, major = angle % 90 === 0
+    line(angle, e.radius - (major ? 26 : count === 60 ? 8 : 16), e.radius, major ? 6 : 3, e.tickColour)
+  }
+  line((17 % 12 + 42 / 60) * 30, 0, e.hour.length, e.hour.width, e.hour.colour)
+  line(42 * 6, 0, e.minute.length, e.minute.width, e.minute.colour)
+  if (e.second) line(30, -20, e.second.length, e.second.width, e.second.colour)
+  if (e.dot) { g.fillStyle = colourOf(e.dot); g.beginPath(); g.arc(e.cx, e.cy, 8, 0, 2 * Math.PI); g.fill() }
+  return { x: e.cx - e.radius - 6, y: e.cy - e.radius - 6, w: 2 * e.radius + 12, h: 2 * e.radius + 12 }
+}
+
+// One text element; returns its bounds, for picking it up in the editor
+function drawText(g, e) {
+  const f = fontOf(e.font), text = textOf(e)
+  g.font = f.css
+  const m = g.measureText(text), A = m.fontBoundingBoxAscent, D = m.fontBoundingBoxDescent
+  const h = f.box || A + D, size = typeof e.font === 'object' ? e.font.size : UI[e.font]
+  // The line box's text sits in its middle, as on the radio
+  const base = e.y + (h - A - D) / 2 + A
+  const iconW = e.kind === 'alarm' || e.kind === 'weather' ? size * 1.1 : 0
+  let secs = 0
+  if (e.kind === 'time' && e.seconds) { g.font = `30px ${SANS}`; secs = 6 + g.measureText('05').width; g.font = f.css }
+  const w = iconW + m.width + secs
+  const x = e.x - (e.align === 'centre' ? w / 2 : e.align === 'right' ? w : 0)
+  g.fillStyle = colourOf(e.colour); g.textAlign = 'left'; g.textBaseline = 'alphabetic'
+  if (iconW) icon(g, e.kind, x, base - size * .35, size * .9)
+  g.fillText(text, x + iconW, base)
+  if (secs) { g.font = `30px ${SANS}`; g.fillStyle = '#8a8a90'; g.fillText('05', x + w - secs + 6, base) }
+  return { x, y: e.y, w, h }
+}
+
+// The face on a square canvas of any size; bg: a 480 px canvas or null.
+// selected: the element to outline (the editor's). Returns the bounds.
+function drawFace(canvas, face, bg, selected = -1) {
+  const g = canvas.getContext('2d'), k = canvas.width / RADIO
+  g.setTransform(k, 0, 0, k, 0, 0)
+  g.fillStyle = face.background.colour || '#000'
+  g.fillRect(0, 0, RADIO, RADIO)
+  if (face.background.picture && bg) g.drawImage(bg, 0, 0, RADIO, RADIO)
+  const bounds = face.elements.map((e) => e.kind === 'analog' ? drawAnalog(g, e) : drawText(g, e))
+  const b = bounds[selected]
+  if (b) {
+    g.setLineDash([6, 6]); g.strokeStyle = accent(); g.lineWidth = 2
+    if (face.elements[selected].kind === 'analog') {
+      g.beginPath(); g.arc(b.x + b.w / 2, b.y + b.h / 2, b.w / 2, 0, 2 * Math.PI); g.stroke()
+    } else g.strokeRect(b.x - 5, b.y - 5, b.w + 10, b.h + 10)
+    g.setLineDash([])
+  }
+  return bounds
+}
+
+// The built-in faces (src/ui/ambient_faces.cpp) roughly, as face files
+const T = (x, y, text, font, colour, align = 'centre') => ({ kind: 'text', x, y, text, font, colour, align })
+const BUILT_IN = {
+  Digital: [{ kind: 'time', x: 240, y: 110, align: 'centre', font: 'clock140', colour: 'text' }, T(240, 250, DATES.long, 'ui30', 'dim'),
+            { kind: 'alarm', x: 240, y: 300, align: 'centre', font: 'ui30', colour: 'dim' },
+            { kind: 'weather', words: true, x: 240, y: 345, align: 'centre', font: 'ui30', colour: 'accent' }],
+  Analog: [{ kind: 'analog', cx: 240, cy: 210, radius: 150, ticks: 'hours', tickColour: 'dim', dot: 'accent',
+             hour: { length: 82, width: 10, colour: 'text' }, minute: { length: 124, width: 6, colour: 'text' } },
+           T(240, 255, 'SUN 1', 'ui22', 'dim'), { kind: 'alarm', x: 240, y: 400, align: 'centre', font: 'ui30', colour: 'dim' }],
+  Split: [T(40, 100, '17', 'clock140', 'text', 'left'), T(40, 240, '42', 'clock140', 'accent', 'left'),
+          T(270, 150, 'Sunday', 'ui30', 'text', 'left'), T(270, 195, '1 November', 'ui30', 'dim', 'left'),
+          { kind: 'alarm', x: 270, y: 245, align: 'left', font: 'ui30', colour: 'dim' }],
+  Night: [{ kind: 'time', x: 240, y: 180, align: 'centre', font: 'clock96', colour: '#a0201a' }, T(240, 280, 'Sun 1 Nov · 07:30', 'ui22', '#701510')],
+  Segment: [T(240, 170, '17:42', 'clock140', '#ff3b30')],
+}
+
+// ----- The faces on the radio -----
+
+let faces = null              // the radio's /api/faces
+const faceBgs = new Map()     // face id: its background, a 480 px canvas
+
+// A 480 x 480 RGB565 picture (little-endian, as rgb565() writes) on a canvas
+function fromRgb565(buffer) {
+  const c = document.createElement('canvas')
+  c.width = c.height = RADIO
+  const g = c.getContext('2d'), im = g.createImageData(RADIO, RADIO), v = new DataView(buffer)
+  for (let i = 0; i < RADIO * RADIO; i++) {
+    const p = v.getUint16(i * 2, true)
+    im.data.set([(p >> 11) * 255 / 31, (p >> 5 & 63) * 255 / 63, (p & 31) * 255 / 31, 255], i * 4)
+  }
+  g.putImageData(im, 0, 0)
+  return c
+}
+
+// Backgrounds come one at a time, like the wallpaper thumbnails
+function loadFaceBg(id) {
+  if (faceBgs.has(id)) return Promise.resolve(faceBgs.get(id))
+  return thumbQueue = thumbQueue.then(async () => {
+    try {
+      const r = await fetch(q('/api/faceasset', `&id=${id}&file=bg.bin`))
+      if (r.ok) faceBgs.set(id, fromRgb565(await r.arrayBuffer()))
+    } catch (e) {}
+    return faceBgs.get(id)
+  })
+}
+
+async function loadFaces() {
+  try {
+    faces = await api('/api/faces')
+    fail($('facesError'), faces.card ? '' : 'There\'s no microSD card in the radio: your own faces need one.')
+  } catch (e) {
+    faces = null
+    if (e.message !== 'locked') fail($('facesError'), `Can't read the clock faces: ${e.message}`)
+  }
+  renderFaces()
+}
+
+function faceTile(name, draw, extra = '') {
+  const fig = document.createElement('figure')
+  fig.innerHTML = `<span><canvas width="240" height="240"></canvas></span><figcaption></figcaption>`
+  fig.querySelector('figcaption').textContent = name
+  fig.querySelector('figcaption').insertAdjacentHTML('beforeend', extra)
+  draw(fig.querySelector('canvas'))
+  return fig
+}
+
+function renderFaces() {
+  const grid = $('faces')
+  grid.textContent = ''
+  if (!faces) return
+  for (const name of faces.builtIn) {
+    const elements = BUILT_IN[name] || [T(240, 220, name, 'ui30', 'dim')]
+    grid.append(faceTile(name, (c) => drawFace(c, { background: { colour: '#000' }, elements }, null),
+                         ' <span class="dim">· built in</span>'))
+  }
+  for (const f of faces.faces) {
+    const fig = faceTile(f.name, (c) => {
+      drawFace(c, f.face, null)
+      if (f.bg) loadFaceBg(f.id).then((bg) => drawFace(c, f.face, bg))
+    })
+    const pic = fig.querySelector('span')
+    pic.className = 'edit'; pic.title = 'Edit'
+    pic.onclick = () => edit(f)
+    const x = document.createElement('button')
+    x.className = 'x'; x.title = 'Delete from the radio'; x.textContent = '×'
+    x.onclick = async (e) => {
+      e.stopPropagation()
+      if (!confirm(`Delete the face “${f.name}” from the radio?`)) return
+      await api('/api/face/delete', { method: 'POST' }, `&id=${f.id}`).catch((e) => e.message !== 'locked' && alert(e.message))
+      faceBgs.delete(f.id)
+      loadFaces()
+    }
+    pic.append(x)
+    grid.append(fig)
+  }
+  if (faces.card) {
+    const add = document.createElement('label')
+    add.className = 'add'
+    add.innerHTML = '<figure><span>+</span><figcaption>New face</figcaption></figure>'
+    add.onclick = () => edit(null)
+    grid.append(add)
+  }
+}
+
+// ----- The face editor: the face at 3/4 size, drag its pieces into place,
+// style them on the right, then send the file, its picture and fonts -----
+
+// id: 0 for a new face; bg: the background picture (480 px canvas);
+// bgNew: it needs sending; sel: the selected element; bounds: as last drawn
+let ed = null, feDrag = null, adding = false
+const fontFiles = new Set()   // families loaded on this page, so they can be converted
+
+const NEW = {
+  time: () => ({ kind: 'time', seconds: false, x: 240, y: 170, align: 'centre', font: 'clock140', colour: 'text' }),
+  date: () => ({ kind: 'date', format: 'long', x: 240, y: 300, align: 'centre', font: 'ui30', colour: 'dim' }),
+  alarm: () => ({ kind: 'alarm', x: 240, y: 345, align: 'centre', font: 'ui30', colour: 'dim' }),
+  weather: () => ({ kind: 'weather', words: true, x: 240, y: 390, align: 'centre', font: 'ui30', colour: 'accent' }),
+  text: () => ({ kind: 'text', text: 'Good night', x: 240, y: 60, align: 'centre', font: 'ui22', colour: 'dim' }),
+  analog: () => ({ kind: 'analog', cx: 240, cy: 220, radius: 150, ticks: 'hours', tickColour: 'dim', dot: 'accent',
+                   hour: { length: 82, width: 10, colour: 'text' }, minute: { length: 124, width: 6, colour: 'text' } }),
+}
+
+async function edit(f) {
+  const face = f ? structuredClone(f.face) : { format: 1, name: '', background: { colour: '#000000' }, elements: [] }
+  ed = { id: f ? f.id : 0, face, bg: null, bgNew: false, sel: face.elements.length ? 0 : -1, bounds: [] }
+  adding = false
+  $('feTitle').textContent = f ? `Edit “${f.name}”` : 'New clock face'
+  $('feName').value = face.name
+  show($('editor'), true); show($('feButtons'), true); show($('feProgress'), false); fail($('feError'), '')
+  renderEditor()
+  $('editor').scrollIntoView({ behavior: 'smooth' })
+  if (f && f.bg) { ed.bg = await loadFaceBg(f.id); drawEditor() }
+}
+
+function drawEditor() {
+  ed.bounds = drawFace($('feCanvas'), ed.face, ed.bg, ed.sel)
+  show($('feBright'), brightness() > 0.25)
+}
+
+// Average luminance of the background, 0..1: a bright face lit all night uses
+// more battery and wears the AMOLED, so the editor says so
+function brightness() {
+  const lum = (r, g, b) => (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
+  const bg = ed.face.background
+  if (bg.colour) { const n = parseInt(bg.colour.slice(1), 16); return lum(n >> 16, n >> 8 & 255, n & 255) }
+  if (!ed.bg) return 0
+  const c = document.createElement('canvas')
+  c.width = c.height = 32
+  c.getContext('2d').drawImage(ed.bg, 0, 0, 32, 32)
+  const d = c.getContext('2d').getImageData(0, 0, 32, 32).data
+  let sum = 0
+  for (let i = 0; i < d.length; i += 4) sum += lum(d[i], d[i + 1], d[i + 2])
+  return sum / 1024
+}
+
+// Dragging: pick up the topmost element under the pointer, by its bounds
+const feCanvas = $('feCanvas')
+feCanvas.onpointerdown = (ev) => {
+  const r = feCanvas.getBoundingClientRect(), k = RADIO / r.width
+  const px = (ev.clientX - r.left) * k, py = (ev.clientY - r.top) * k
+  let i = ed.bounds.length
+  while (i--) { const b = ed.bounds[i]; if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) break }
+  ed.sel = i
+  renderEditor()
+  if (i < 0) return
+  const e = ed.face.elements[i], a = e.kind === 'analog'
+  feCanvas.setPointerCapture(ev.pointerId)
+  feDrag = { px: ev.clientX, py: ev.clientY, k, x: a ? e.cx : e.x, y: a ? e.cy : e.y }
+}
+feCanvas.onpointermove = (ev) => {
+  const d = feDrag, e = ed && ed.face.elements[ed.sel]
+  if (!d || !e) return
+  const x = Math.round(d.x + (ev.clientX - d.px) * d.k), y = Math.round(d.y + (ev.clientY - d.py) * d.k)
+  if (e.kind === 'analog') { e.cx = x; e.cy = y } else { e.x = x; e.y = y }
+  drawEditor()
+}
+feCanvas.onpointerup = () => { feDrag = null }
+$('feCancel').onclick = () => { show($('editor'), false); if (cropForFace) show($('crop'), false); ed = null }
+$('feName').oninput = () => { ed.face.name = $('feName').value; $('feSend').disabled = !ed.face.name.trim() }
+
+// A small element builder for the panel: el('button', { className: 'on' }, 'Text')
+const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e }
+const changed = () => drawEditor()
+
+// A field: label, then a select, a range or a text input
+function field(label, input) { return el('label', { className: 'field' }, label, input) }
+function choice(label, value, options, set) {
+  const s = el('select', { onchange: () => { set(s.value); renderEditor() } },
+               ...options.map(([v, name]) => el('option', { value: v, textContent: name })))
+  s.value = value
+  return field(label, s)
+}
+function slider(label, value, min, max, set) {
+  const r = el('input', { type: 'range', min, max, value })
+  r.oninput = () => { set(Number(r.value)); changed() }
+  return field(label, r)
+}
+function toggle(label, on, set) {
+  const c = el('input', { type: 'checkbox', checked: on, onchange: () => { set(c.checked); changed() } })
+  return el('label', { className: 'toggle' }, c, label)
+}
+// The radio's own colours first (the accent follows Settings > Display), then any
+function colour(label, value, set) {
+  const named = { accent: accent(), text: '#ededed', dim: '#8a8a90' }
+  const custom = !(value in named)
+  const pickAny = el('input', { type: 'color', title: 'Any colour', value: custom ? value : '#ff9f0a', className: custom ? 'on' : '' })
+  pickAny.oninput = () => { set(pickAny.value); changed() }
+  pickAny.onchange = renderEditor
+  return el('div', { className: 'field' }, label, el('span', { className: 'swatches' },
+    ...Object.keys(named).map((c) => el('button', { title: c, className: value === c ? 'on' : '', style: `background:${named[c]}`,
+                                                   onclick: () => { set(c); renderEditor() } })),
+    pickAny))
+}
+
+function renderEditor() {
+  const face = ed.face, bg = face.background
+  $('feSend').disabled = !face.name.trim()
+
+  const black = bg.colour === '#000000'
+  const any = el('input', { type: 'color', value: bg.colour || '#000000' })
+  any.oninput = () => { face.background = { colour: any.value }; changed() }
+  any.onchange = renderEditor
+  const picture = el('input', { type: 'file', accept: 'image/*', hidden: true })
+  picture.onchange = () => picture.files[0] && pick(picture.files[0], true)
+  $('feBg').replaceChildren(
+    el('button', { className: black ? 'on' : '', textContent: 'Black', onclick: () => { face.background = { colour: '#000000' }; renderEditor() } }),
+    el('label', { className: bg.colour && !black ? 'on' : '' }, 'Colour', any),
+    el('label', { className: bg.picture ? 'on' : '' }, 'Picture…', picture))
+
+  const list = face.elements.map((e, i) => el('button', { className: i === ed.sel ? 'on' : '', onclick: () => { ed.sel = i; renderEditor() } },
+    NAMES[e.kind], e.kind === 'date' ? el('span', { className: 'dim', textContent: '· ' + e.format }) : ''))
+  if (adding) {
+    for (const k in NEW) list.push(el('button', { className: 'more', textContent: '+ ' + NAMES[k], onclick: () => {
+      face.elements.push(NEW[k]()); ed.sel = face.elements.length - 1; adding = false; renderEditor()
+    } }))
+  } else list.push(el('button', { className: 'more', textContent: '+ Add', onclick: () => { adding = true; renderEditor() } }))
+  $('feList').replaceChildren(...list)
+
+  $('feProps').replaceChildren(...props(face.elements[ed.sel]))
+  drawEditor()
+}
+
+// The selected piece's settings
+function props(e) {
+  if (!e) return []
+  const out = [el('div', { className: 'group-title' }, el('span', { textContent: NAMES[e.kind] }),
+    el('button', { className: 'remove', textContent: 'Remove', onclick: () => {
+      ed.face.elements.splice(ed.sel, 1); ed.sel = -1; renderEditor()
+    } }))]
+  if (e.kind === 'analog') {
+    out.push(
+      slider('Size', e.radius, 60, 230, (v) => { e.radius = v }),
+      choice('Marks', e.ticks, [['none', 'None'], ['quarters', '12, 3, 6, 9'], ['hours', 'Hours'], ['minutes', 'Minutes']], (v) => { e.ticks = v }),
+      colour('Marks', e.tickColour, (c) => { e.tickColour = c }),
+      colour('Hands', e.hour.colour, (c) => { e.hour.colour = e.minute.colour = c }),
+      slider('Hand width', e.minute.width, 2, 16, (w) => { e.minute.width = w; e.hour.width = Math.round(w * 1.6) }),
+      colour('Centre', e.dot || 'text', (c) => { e.dot = c }),
+      toggle('Seconds hand (with Show seconds on)', !!e.second, (on) => {
+        if (on) e.second = { length: 135, width: 2, colour: 'accent' }; else delete e.second
+      }))
+    return out
+  }
+  if (e.kind === 'date') out.push(choice('Shows', e.format, Object.entries(DATES), (v) => { e.format = v }))
+  if (e.kind === 'text') {
+    const t = el('input', { className: 'text', value: e.text, maxLength: 30 })
+    t.oninput = () => { e.text = t.value; changed() }
+    out.push(field('Text', t))
+  }
+  if (e.kind === 'time') out.push(toggle('Seconds (with Show seconds on)', e.seconds, (on) => { e.seconds = on }))
+  if (e.kind === 'weather') out.push(toggle('Words (“Partly cloudy”)', e.words, (on) => { e.words = on }))
+
+  // Fonts: the radio's, then uploaded ones (the clock fonts have digits only:
+  // fine for the time, not for words)
+  const own = typeof e.font === 'object'
+  const files = new Set(fontFiles)
+  if (own) files.add(familyOf(e.font.file))
+  const options = Object.keys(UI).filter((f) => e.kind === 'time' || !f.startsWith('clock'))
+    .map((f) => [f, f.startsWith('clock') ? `Clock ${UI[f]}` : `Text ${UI[f]}`])
+  for (const f of files) options.push(['file:' + f, f])
+  out.push(choice('Font', own ? 'file:' + familyOf(e.font.file) : e.font, options, (v) => {
+    e.font = v.startsWith('file:') ? { file: fontName(v.slice(5), own ? e.font.size : 120), size: own ? e.font.size : 120 } : v
+  }))
+  if (own) {
+    const family = familyOf(e.font.file)
+    if (fontFiles.has(family)) {
+      out.push(slider('Size', e.font.size, 16, 200, (size) => { e.font = { file: fontName(family, size), size } }))
+    } else {
+      // A face from the card: its font file is there, but not the font itself
+      out.push(el('p', { className: 'dim', textContent: `To change the size or the letters, load ${family} again below.` }))
+    }
+  }
+  const upload = el('input', { type: 'file', accept: '.ttf,.otf,.woff', hidden: true })
+  upload.onchange = () => upload.files[0] && addFont(upload.files[0], e)
+  out.push(el('label', { className: 'upload' }, 'Use your own font (.ttf, .otf)…', upload),
+    colour('Colour', e.colour, (c) => { e.colour = c }),
+    choice('Line up', e.align, [['left', 'Left'], ['centre', 'Centre'], ['right', 'Right']], (v) => { e.align = v }))
+  return out
+}
+
+// The asset's name on the card: one file per font and size, [A-Za-z0-9_-]{1,24}.bin
+const fontName = (family, size) => `${family}_${size}.bin`
+
+async function addFont(file, e) {
+  // A family name that's also a good file name, with room for "_200"
+  const family = file.name.replace(/\.[^.]+$/, '').replace(/[^A-Za-z0-9_-]/g, '').replace(/_\d+$/, '').slice(0, 20) || 'Font'
+  try {
+    document.fonts.add(await new FontFace(family, await file.arrayBuffer()).load())
+  } catch (err) {
+    return fail($('feError'), `That font didn't load: ${err.message}`)
+  }
+  fontFiles.add(family)
+  const size = e.kind === 'time' ? 120 : 40
+  e.font = { file: fontName(family, size), size }
+  renderEditor()
+}
+
+// ----- Your own fonts, converted here into LVGL's binary font: the format
+// lv_font_conv --format bin writes and the radio's lv_binfont_loader.c reads.
+// Only the glyphs the face needs, at one size, 4 bits per pixel, no
+// compression, no kerning. All little-endian; each table starts with its
+// length in bytes (these 8 included) and a 4-letter label.
+
+const DAYS = 'Monday Tuesday Wednesday Thursday Friday Saturday Sunday'
+const MONTHS = 'January February March April May June July August September October November December'
+const SKY = 'Clear Mainly Partly cloudy Overcast Fog Icy Drizzle Light Heavy Freezing Rain Showers Snow grains Thunderstorm, hail Unknown'
+// The characters an element can show on the radio
+function glyphsOf(e) {
+  const d = '0123456789 '
+  return d + ({ time: ':AMP', alarm: ':', weather: '-°' + (e.words ? SKY : ''), text: e.text,
+                date: e.format === 'numeric' ? '.' : DAYS + MONTHS + ',.' })[e.kind]
+}
+
+// The smallest number of bits holding v (unsigned), or -v..v (signed)
+const bitsU = (v) => Math.max(1, Math.ceil(Math.log2(v + 1)))
+const bitsS = (v) => bitsU(Math.abs(v)) + 1
+
+function binFont(family, size, chars, measure = rasterise) {
+  // The code points, sorted (the cmap's list is searched in halves); within
+  // 16 bits, as the cmap stores them. Glyph 0 is the reserved empty one.
+  const cps = [...new Set([...chars].map((c) => c.codePointAt(0)))].filter((c) => c >= 32 && c < 0x10000).sort((a, b) => a - b)
+  const { ascent, descent, glyphs } = measure(family, size, cps)
+  const all = [{ adv: 0, x: 0, y: 0, w: 0, h: 0, px: [] }, ...glyphs]
+  const advBits = bitsU(Math.max(...all.map((g) => g.adv)))
+  const xyBits = Math.max(...all.map((g) => Math.max(bitsS(g.x), bitsS(g.y))))
+  const whBits = bitsU(Math.max(...all.map((g) => Math.max(g.w, g.h))))
+
+  // glyf: each glyph a bit stream from a byte boundary, most significant bit
+  // first: advance (whole pixels), x and y offset of the ink box (y: its
+  // bottom, up from the baseline), its width and height, then its pixels
+  // row after row with no padding, 4 bits each
+  const bytes = [], loca = []
+  for (const g of all) {
+    loca.push(8 + bytes.length)
+    let acc = 0, n = 0
+    const put = (v, bits) => {
+      for (let b = bits - 1; b >= 0; b--) {
+        acc = acc << 1 | (v >> b & 1)
+        if (++n === 8) { bytes.push(acc); acc = n = 0 }
+      }
+    }
+    put(g.adv, advBits); put(g.x, xyBits); put(g.y, xyBits); put(g.w, whBits); put(g.h, whBits)
+    for (const p of g.px) put(p, 4)
+    if (n) bytes.push(acc << (8 - n))
+  }
+
+  const headLen = 48, cmapLen = 12 + 16 + 2 * cps.length, locaLen = 12 + 4 * all.length, glyfLen = 8 + bytes.length
+  const buf = new ArrayBuffer(headLen + cmapLen + locaLen + glyfLen), v = new DataView(buf)
+  let o = 0
+  const u8 = (x) => v.setUint8(o++, x), u16 = (x) => { v.setUint16(o, x, true); o += 2 },
+        i16 = (x) => { v.setInt16(o, x, true); o += 2 }, u32 = (x) => { v.setUint32(o, x, true); o += 4 }
+  const label = (len, name) => { u32(len); for (const c of name) u8(c.charCodeAt(0)) }
+  const ys = glyphs.filter((g) => g.h)
+
+  // head: font_header_bin_t
+  label(headLen, 'head')
+  u32(1); u16(3)                          // version; tables (no kern table)
+  u16(size); u16(ascent); i16(-descent)   // the radio: line height = ascent + descent
+  u16(ascent); i16(-descent); u16(0)      // typo ascent, descent, line gap
+  i16(Math.min(0, ...ys.map((g) => g.y))); i16(Math.max(0, ...ys.map((g) => g.y + g.h)))  // min, max y
+  u16(0); u16(0)                          // default advance (each glyph has its own), kerning scale
+  u8(1); u8(0); u8(0)                     // loca offsets 32-bit; glyph ids 8-bit (kerning only); advances in whole pixels
+  u8(4); u8(xyBits); u8(whBits); u8(advBits)
+  u8(0); u8(0); u8(0)                     // no compression, no subpixels, padding
+  i16(0); u16(0)                          // underline position, thickness
+
+  // cmap: one sparse "tiny" subtable: the code points as offsets from the first,
+  // glyph ids following from 1 in that order. data_offset counts from "cmap".
+  label(cmapLen, 'cmap'); u32(1)
+  u32(28); u32(cps[0]); u16(cps[cps.length - 1] - cps[0] + 1); u16(1); u16(cps.length); u8(3); u8(0)
+  for (const c of cps) u16(c - cps[0])
+
+  // loca: where each glyph starts, counted from "glyf"
+  label(locaLen, 'loca'); u32(all.length)
+  for (const x of loca) u32(x)
+
+  label(glyfLen, 'glyf')
+  new Uint8Array(buf, o).set(bytes)
+  return buf
+}
+
+// Each glyph drawn on a canvas, cropped to its ink, alpha to 4 bits
+function rasterise(family, size, cps) {
+  const c = document.createElement('canvas'), S = size * 3, pen = size, base = size * 2
+  c.width = c.height = S
+  const g = c.getContext('2d', { willReadFrequently: true })
+  g.font = `${size}px "${family}"`
+  g.fillStyle = '#fff'
+  const m = g.measureText('Hg')
+  const glyphs = cps.map((cp) => {
+    const ch = String.fromCodePoint(cp)
+    g.clearRect(0, 0, S, S)
+    g.fillText(ch, pen, base)
+    const d = g.getImageData(0, 0, S, S).data, a = (x, y) => Math.round(d[(y * S + x) * 4 + 3] / 17)
+    let x0 = S, y0 = S, x1 = -1, y1 = -1
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+      if (a(x, y)) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y) }
+    }
+    const adv = Math.round(g.measureText(ch).width)
+    if (x1 < 0) return { adv, x: 0, y: 0, w: 0, h: 0, px: [] }  // a space
+    const px = []
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) px.push(a(x, y))
+    return { adv, x: x0 - pen, y: base - 1 - y1, w: x1 - x0 + 1, h: y1 - y0 + 1, px }
+  })
+  return { ascent: Math.ceil(m.fontBoundingBoxAscent), descent: Math.ceil(m.fontBoundingBoxDescent), glyphs }
+}
+
+// Sending: the face file first (that gives a new face its id), then the new
+// background and the fonts, then "done" and the radio loads it
+$('feSend').onclick = async () => {
+  const face = ed.face
+  face.name = face.name.trim().slice(0, 24)
+  // A font file per font and size, with the glyphs of every element using it.
+  // Fonts that came from the card and weren't loaded again stay as they are.
+  const need = new Map()
+  for (const e of face.elements) {
+    if (typeof e.font !== 'object' || !fontFiles.has(familyOf(e.font.file))) continue
+    need.set(e.font.file, (need.get(e.font.file) || '') + glyphsOf(e))
+  }
+  const assets = []
+  for (const [file, chars] of need) {
+    const font = binFont(familyOf(file), Number(file.match(/_(\d+)\.bin$/)[1]), chars)
+    if (font.byteLength > 262144) return fail($('feError'), `${file} would be ${Math.round(font.byteLength / 1024)} KB, more than the radio takes (256 KB): a smaller size, or fewer letters?`)
+    assets.push([file, font])
+  }
+  if (ed.bgNew) {
+    const body = new ArrayBuffer(RADIO * RADIO * 2)
+    rgb565(ed.bg, body, 0)
+    assets.push(['bg.bin', body])
+  }
+  const json = JSON.stringify(face)
+  if (json.length > 8192) return fail($('feError'), 'The face is too big for the radio: fewer pieces?')
+
+  show($('feButtons'), false); show($('feProgress'), true); fail($('feError'), ''); bar('fe', 0)
+  try {
+    const { id } = await api('/api/face', { method: 'POST', body: new URLSearchParams({ face: json }) }, `&id=${ed.id}`)
+    ed.id = id
+    const total = assets.reduce((n, [, b]) => n + b.byteLength, 0)
+    let sent = 0
+    for (const [file, body] of assets) {
+      await post('/api/faceasset', { 'X-Face': id, 'X-File': file }, body, (n) => bar('fe', (sent + n) / total))
+      sent += body.byteLength
+    }
+    if (ed.bgNew) faceBgs.set(id, ed.bg)
+    await api('/api/face/done', { method: 'POST' }, `&id=${id}`)
+    show($('editor'), false); ed = null
+    loadFaces()
+  } catch (e) {
+    show($('feButtons'), true); show($('feProgress'), false)
+    if (e.message !== 'locked') fail($('feError'), e.message)
+  }
+}
+
+// The crop panel's "Use it": the framed picture becomes the face's background
+function useFaceBg(canvas) {
+  ed.bg = canvas; ed.bgNew = true
+  ed.face.background = { picture: 'bg.bin' }
+  show($('crop'), false)
+  renderEditor()
+  $('editor').scrollIntoView({ behavior: 'smooth' })
+}
+
+lock('')
+$('code').focus()
+</script>
+</body>
+</html>

@@ -1,0 +1,179 @@
+/* Recorder: red for recording, as everywhere; the rest in the radio's colours */
+
+.rec-ready {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 0 4px;
+}
+
+.rec-button {
+  width: 150px;
+  height: 150px;
+  border: 7px solid #ff453a;
+  border-radius: 50%;
+  background: color-mix(in srgb, #ff453a 22%, transparent);
+  color: #ff453a;
+  font-size: 64px;  /* the mic, between font_ui_50 and the clock fonts: add a size, or use 50 */
+  cursor: pointer;
+}
+
+.rec-quality {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+}
+
+.rec-detail {
+  color: var(--text-dim);
+  font-size: var(--font-20);
+}
+
+/* Voice / Music: the name, and what it's for under it; the chosen one in the accent */
+.rec-q {
+  flex: 1;
+  height: 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 2px solid transparent;
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.rec-q.on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.rec-q-what {
+  color: var(--text-dim);
+  font-size: var(--font-20);
+}
+
+/* Recording */
+
+.rec-live {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding-top: 6px;
+}
+
+.rec-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #ff453a;
+}
+
+.rec-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ff453a;
+  animation: rec-blink 1.4s ease-in-out infinite;
+}
+
+@keyframes rec-blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.rec-time {
+  font-size: var(--font-clock-96);
+  line-height: 0.9;
+}
+
+.rec-meter {
+  width: 100%;
+  height: 14px;
+  border-radius: 7px;
+  background: var(--surface-hi);
+  overflow: hidden;
+}
+
+.rec-meter span {
+  display: block;
+  height: 100%;
+  border-radius: 7px;
+  background: linear-gradient(90deg, #30d158 0 70%, #ffd60a 70% 88%, #ff453a 88%);
+  background-size: 448px 100%;  /* the colours stay put as the bar grows */
+  transition: width 0.1s;
+}
+
+/* Stop: a white square on red */
+.rec-stop {
+  width: 96px;
+  height: 96px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: #ff453a;
+  cursor: pointer;
+}
+
+.rec-stop span {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: var(--text);
+}
+
+/* The list */
+
+.rec-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.rec-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rec-sub {
+  color: var(--text-dim);
+  font-size: var(--font-20);
+}
+
+.rec-progress {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-hi);
+  overflow: hidden;
+}
+
+.rec-progress span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+/* Home's status bar while recording (over the upload icon's accent) */
+a.home-rec {
+  color: #ff453a;
+}
+
+/* All recordings: the whole width, as Save is in the alarm editor */
+.rec-all {
+  display: flex;
+  width: 100%;
+}

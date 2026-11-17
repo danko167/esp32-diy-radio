@@ -1,0 +1,67 @@
+/* Slide to unlock, over the clock screen: dim like the clock screen itself */
+
+.lock {
+  position: relative;
+  width: 480px;
+  height: 480px;
+  touch-action: none;
+  user-select: none;
+}
+
+.lock-track {
+  position: absolute;
+  left: 40px;
+  bottom: 18px;
+  width: 400px;
+  height: 70px;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  border-radius: 35px;
+  background: var(--surface);
+  border: 1px solid var(--surface-hi);
+}
+
+/* The words shine left to right, as on the phones */
+.lock-text {
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+  padding-left: 40px;
+  font-size: var(--font-22);
+  background: linear-gradient(90deg, var(--text-dim) 0 40%, var(--text) 50%, var(--text-dim) 60% 100%);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: lock-shine 2.4s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes lock-shine {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+.lock-knob {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--surface-hi);
+  color: var(--text);
+  font-size: var(--font-22);
+  cursor: grab;
+}
+
+.lock-knob.spring {
+  transition: transform 0.25s ease-out;
+}

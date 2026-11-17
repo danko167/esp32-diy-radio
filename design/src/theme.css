@@ -1,0 +1,69 @@
+/* Mirrors the firmware: colours from src/ui/theme.h, fonts from tools/fonts.
+   Only the sizes listed here exist on the device (see tools/gen_fonts.sh);
+   a new size is fine, it just needs generating there too. */
+
+@font-face {
+  font-family: 'Montserrat';
+  font-weight: 500;
+  src: url('../../tools/fonts/Montserrat-Medium.ttf') format('truetype');
+}
+
+/* LVGL's LV_SYMBOL_* icons are Font Awesome 5 Free glyphs */
+@font-face {
+  font-family: 'FontAwesome';
+  src: url('../../tools/fonts/FontAwesome5-Solid+Brands+Regular.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'WeatherIcons';
+  src: url('../../tools/fonts/weathericons-regular-webfont.ttf') format('truetype');
+}
+
+/* The Segment clock face's LED digits */
+@font-face {
+  font-family: 'DSEG7';
+  src: url('../../tools/fonts/DSEG7Classic-Bold.ttf') format('truetype');
+}
+
+:root {
+  --bg: #000000; /* AMOLED: black pixels are off */
+  --surface: #161618;
+  --surface-hi: #26262b;
+  --text: #ededed;
+  --text-dim: #8a8a90;
+  --accent: #5ac8fa;
+
+  /* Font sizes that exist on the device: everything 2 px bigger than at first
+     (18 / 20 / 28 / 48), as small text was hard to read on the radio */
+  --font-20: 20px;  /* the smallest text */
+  --font-22: 22px;
+  --font-30: 30px;
+  --font-50: 50px;
+  --font-clock-96: 96px; /* digits, colon, minus and degree sign only */
+  --font-clock-140: 140px;
+  --font-seg-112: 112px; /* DSEG7: digits, colon, minus and a blank digit (!) */
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+body {
+  background: #1b1b1f;
+  color: var(--text);
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500;
+  font-size: var(--font-22);
+}
+
+.icon {
+  font-family: 'FontAwesome';
+  font-weight: normal;
+  font-style: normal;
+}
+
+.weather-icon {
+  font-family: 'WeatherIcons';
+  font-weight: normal;
+}

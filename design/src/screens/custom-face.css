@@ -1,0 +1,35 @@
+/* A face from a file: absolutely placed elements on a background */
+
+.cfx {
+  position: relative;
+  width: 480px;
+  height: 480px;
+  overflow: hidden;
+  color: var(--text);
+}
+
+.cfx-item {
+  position: absolute;
+  white-space: pre;
+  user-select: none;
+}
+
+/* In the editor: the element being moved */
+.cfx-item.selected {
+  outline: 2px dashed var(--accent);
+  outline-offset: 4px;
+}
+
+.cfx-dial.selected {
+  border-radius: 50%;
+}
+
+.cfx-seconds {
+  font-size: 30px;
+  color: var(--text-dim);
+  padding-left: 6px;
+}
+
+.cfx .weather-icon {
+  font-size: 1.2em;
+}

@@ -1,0 +1,220 @@
+/* Clock screen faces: pure black, the device's fonts only */
+
+.cf {
+  width: 480px;
+  height: 480px;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+}
+
+.cf-column {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.cf-date,
+.cf-alarm {
+  color: var(--text-dim);
+  font-size: var(--font-30);
+}
+
+.cf-weather {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 16px;
+  color: var(--accent);
+  font-size: var(--font-30);
+  white-space: pre;
+}
+
+.cf-weather .weather-icon {
+  font-size: 44px;  /* font_weather_44 */
+}
+
+/* Digital */
+
+.cf-time {
+  font-size: var(--font-clock-140);
+  line-height: 120px;
+}
+
+/* Analog */
+
+.cf-analog-wrap {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.cf-dial {
+  position: relative;
+}
+
+.cf-dial svg {
+  display: block;
+}
+
+.cf-dial-date {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 82px;  /* under the 12, where watches print their name */
+  text-align: center;
+  color: var(--text-dim);
+  font-size: var(--font-22);
+  letter-spacing: 2px;
+}
+
+.cf-analog-info {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.cf-analog-info .cf-weather {
+  padding-top: 0;
+}
+
+/* Split */
+
+.cf-split {
+  height: 480px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 28px;
+}
+
+.cf-split-time {
+  display: flex;
+  flex-direction: column;
+  font-size: var(--font-clock-140);
+  line-height: 150px;
+}
+
+.cf-split-minutes {
+  color: var(--text-dim);
+}
+
+.cf-split-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.cf-split-day {
+  font-size: var(--font-30);
+}
+
+.cf-split-info .cf-weather {
+  padding-top: 12px;
+}
+
+/* Night and Segment: dim red, or an old terminal's green about as bright
+   (green looks brighter than red at the same level, so it's lower) */
+
+.cf-red {
+  --night-time: #b3261e;
+  --night-line: #6e1712;
+}
+
+.cf-green {
+  --night-time: #13882f;
+  --night-line: #0a4518;
+}
+
+.cf-night .cf-column,
+.cf-segment .cf-column {
+  gap: 10px;
+}
+
+.cf-night-time {
+  color: var(--night-time);
+  font-size: var(--font-clock-96);
+  line-height: 90px;
+}
+
+.cf-night-date {
+  color: var(--night-line);
+  font-size: var(--font-22);
+}
+
+/* Segment: the lit digits over the unlit ones, at 14% of the colour */
+.cf-segment-time {
+  display: grid;
+  color: var(--night-time);
+  font-family: 'DSEG7';
+  font-size: var(--font-seg-112);
+  line-height: 112px;
+}
+
+.cf-segment-time > span {
+  grid-area: 1 / 1;
+  text-align: right;
+}
+
+.cf-segment-unlit {
+  color: color-mix(in srgb, var(--night-time) 14%, black);
+}
+
+/* Picker in Settings > Clock screen: the real faces, shrunk */
+
+/* Two across, each filling its half; a little room under the title */
+.faces {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px 12px;
+  margin-top: 12px;
+}
+
+.face-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: var(--font-20);
+  cursor: pointer;
+}
+
+/* On the device: the preview clipped to the rounded corners (clip_corner),
+   or the black screen inside covers the border's corners */
+.face-thumb {
+  width: 206px;
+  height: 206px;
+  overflow: hidden;
+  border: 2px solid var(--surface-hi);
+  border-radius: 20px;
+}
+
+.face-thumb .cf,
+.face-thumb .cfx {
+  transform: scale(0.4208);  /* 202 / 480: inside the 2 px border */
+  transform-origin: top left;
+}
+
+.face-pick.selected .face-thumb {
+  border-color: var(--accent);
+}
+
+.face-pick.selected {
+  color: var(--accent);
+}
+
+.cf-night-weather .weather-icon {
+  font-size: 30px;  /* font_weather_30 */
+}

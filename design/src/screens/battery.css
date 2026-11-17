@@ -1,0 +1,39 @@
+/* Battery notices: on the device's top layer, over any screen */
+
+.battery-over {
+  position: relative;
+  height: 100%;
+}
+
+.battery-notice {
+  position: absolute;
+  top: 12px;
+  left: 40px;
+  width: 400px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  border-radius: 28px;
+  background: var(--surface-hi);
+  color: var(--text);
+  font-size: var(--font-22);
+}
+
+.battery-notice .icon,
+.battery-empty .icon {
+  color: #ff453a;  /* theme::kRed */
+}
+
+.battery-empty {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: var(--font-30);
+}

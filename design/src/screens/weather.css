@@ -1,0 +1,256 @@
+/* Now: fixed layout, nothing scrolls */
+
+.wx-now {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.wx-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+/* font_weather_120 */
+.wx-hero-icon {
+  font-size: 120px;
+  line-height: 1;
+}
+
+.wx-hero-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wx-temp {
+  font-size: var(--font-clock-96);
+  line-height: 0.9;
+}
+
+.wx-desc {
+  font-size: var(--font-30);
+}
+
+.wx-glance {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+}
+
+.wx-glance-hour {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.wx-glance-hour .weather-icon {
+  font-size: var(--font-30);
+  line-height: 1.3;
+}
+
+.wx-pills {
+  display: flex;
+  gap: 8px;
+}
+
+/* Hourly */
+
+.wx-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wx-chart svg {
+  display: block;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500;
+}
+
+.wx-chart-row {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  justify-items: center;
+}
+
+.wx-chart-row .weather-icon {
+  font-size: var(--font-30);
+}
+
+.wx-list {
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  background: var(--surface);
+  padding: 4px 18px;
+}
+
+.wx-hour-row,
+.wx-day-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--surface-hi);
+}
+
+.wx-hour-row:last-child,
+.wx-day-row:last-child {
+  border-bottom: 0;
+}
+
+.wx-hour-row {
+  height: 54px;
+}
+
+.wx-hour-time {
+  width: 74px;
+  color: var(--text-dim);
+}
+
+.wx-row-icon {
+  width: 42px;
+  text-align: center;
+  font-size: var(--font-30);
+}
+
+.wx-rain {
+  flex: 1;
+  color: var(--accent);
+  font-size: var(--font-20);
+}
+
+/* font_weather_28: the device has no smaller weather icons */
+.wx-rain .weather-icon {
+  font-size: var(--font-30);
+  vertical-align: middle;
+}
+
+.wx-hour-temp {
+  font-size: var(--font-30);
+}
+
+/* Next days */
+
+.wx-day-row {
+  height: 64px;
+}
+
+.wx-day-name {
+  width: 140px;
+  flex: none;
+}
+
+.wx-day-min,
+.wx-day-max {
+  width: 38px;
+  text-align: right;
+}
+
+.wx-day-min {
+  color: var(--text-dim);
+}
+
+.wx-day-max {
+  text-align: left;
+}
+
+/* lv_bar on the device: track, coloured range, a dot for "now" */
+.wx-range {
+  position: relative;
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--surface-hi);
+}
+
+.wx-range-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent), #ff9f0a);
+}
+
+.wx-range-now {
+  position: absolute;
+  top: -4px;
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
+  border: 3px solid var(--surface);
+  border-radius: 50%;
+  background: var(--text);
+}
+
+/* Details */
+
+.wx-tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* Icon on the left, value and label beside it, as on the Settings tiles */
+.wx-tile {
+  height: 102px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border-radius: 20px;
+  background: var(--surface);
+}
+
+/* Fixed width, so the values line up from tile to tile */
+.wx-tile-icon {
+  flex: none;
+  width: 42px;
+  text-align: center;
+  font-size: var(--font-30);
+  line-height: 1;
+}
+
+.wx-tile-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wx-tile-value {
+  font-size: var(--font-30);
+}
+
+/* No forecast yet */
+
+.wx-waiting {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.wx-waiting-icon {
+  margin-bottom: 8px;
+  color: var(--accent);
+  font-size: var(--font-50);
+}
+
+/* lv_spinner on the device */
+.wx-spin {
+  animation: wx-spin 1.2s linear infinite;
+}
+
+@keyframes wx-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

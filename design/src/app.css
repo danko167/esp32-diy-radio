@@ -1,0 +1,99 @@
+/* The playground around the device; nothing in here goes to the radio */
+
+.playground {
+  display: flex;
+  min-height: 100vh;
+}
+
+.picker {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  flex: none;
+  width: 220px;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #111114;
+  font-size: 15px;
+}
+
+.picker h1 {
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+.picker button {
+  text-align: left;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.picker button.selected {
+  background: var(--surface-hi);
+}
+
+.picker-entry {
+  display: flex;
+  flex-direction: column;
+}
+
+.picker h3 {
+  margin: 12px 0 6px;
+  padding-left: 12px;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.picker button.grouped {
+  padding-left: 24px;
+}
+
+.picker label {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--text-dim);
+}
+
+.picker .hint {
+  margin-top: auto;
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+main {
+  flex: 1;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The radio's screen */
+.device {
+  position: relative;
+  width: 480px;
+  height: 480px;
+  overflow: hidden;
+  background: var(--bg);
+  border-radius: 24px;
+  box-shadow: 0 0 0 10px #050505, 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* A page as a computer's browser shows it (Web / ...) */
+main.computer {
+  align-items: flex-start;
+  overflow-y: auto;
+  background: var(--bg);
+}

@@ -1,0 +1,4 @@
+# Everything here stays on this computer: secrets.ini (passwords) and such.
+# Rules for it can't live in the root .gitignore, which PlatformIO rewrites.
+*
+!.gitignore

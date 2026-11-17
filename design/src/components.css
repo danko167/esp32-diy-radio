@@ -1,0 +1,294 @@
+/* Same sizes as src/ui/common.cpp */
+
+.app-screen {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-screen header {
+  height: 74px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 16px;
+}
+
+.app-screen .titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.app-screen .caption {
+  color: var(--accent);
+  font-size: var(--font-20);
+}
+
+.app-screen h2 {
+  font-size: var(--font-30);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-screen footer {
+  flex: none;
+  padding: 8px 16px 16px;
+}
+
+.app-screen .body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scrollbar-width: none;
+}
+
+.back {
+  width: 54px;
+  height: 54px;
+  flex: none;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-hi);
+  color: var(--text);
+  font-size: var(--font-22);
+  cursor: pointer;
+}
+
+.section {
+  padding: 16px 0 0 8px;
+  color: var(--accent);
+  font-size: var(--font-20);
+}
+
+.section-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-right: 8px;
+}
+
+/* Text colours and the small size, for any screen */
+.accent {
+  color: var(--accent);
+}
+
+.dim {
+  color: var(--text-dim);
+}
+
+.faint {
+  color: var(--surface-hi);
+}
+
+.small {
+  font-size: var(--font-20);
+}
+
+.hint {
+  padding: 4px 8px;
+  color: var(--text-dim);
+  font-size: var(--font-20);
+  line-height: 1.4;
+}
+
+.hint.big {
+  font-size: var(--font-22);
+}
+
+/* Pills: 46 / 50 / 58 px high, the firmware's addPill() heights */
+.pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 24px;
+  border: 0;
+  background: var(--surface-hi);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.pill-small {
+  height: 46px;
+  padding: 0 18px;
+  border-radius: 23px;
+}
+
+.pill-normal {
+  height: 50px;
+  border-radius: 25px;
+}
+
+.pill-big {
+  height: 58px;
+  border-radius: 29px;
+}
+
+.pill.primary {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.pill.on {
+  color: var(--accent);
+}
+
+.pill.grow {
+  flex: 1;
+  padding: 0;
+}
+
+.pill.wide {
+  width: 100%;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 20px;
+  background: var(--surface);
+}
+
+.card.vertical {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.card.tappable {
+  cursor: pointer;
+}
+
+.card.tappable:active {
+  background: var(--surface-hi);
+}
+
+.round {
+  flex: none;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-hi);
+  color: var(--text);
+  font-size: var(--font-22);
+  cursor: pointer;
+}
+
+.round.primary {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.switch {
+  position: relative;
+  width: 66px;
+  height: 38px;
+  flex: none;
+  border: 0;
+  border-radius: 18px;
+  background: var(--surface-hi);
+  cursor: pointer;
+}
+
+.switch span {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--text);
+  transition: left 0.15s;
+}
+
+.switch.on {
+  background: var(--accent);
+}
+
+.switch.on span {
+  left: 32px;
+}
+
+.big-slider {
+  position: relative;
+  height: 58px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  overflow: hidden;
+  border-radius: 28px;
+  background: var(--surface-hi);
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+
+.big-slider .fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--accent);
+}
+
+.big-slider .icon,
+.big-slider .value {
+  position: relative;
+}
+
+.big-slider .icon.on-fill {
+  color: var(--bg);
+}
+
+.roller {
+  width: 130px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 20px;
+  background: var(--surface);
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
+}
+
+.roller span {
+  height: 54px;
+  display: flex;
+  align-items: center;
+  color: var(--text-dim);
+  font-size: var(--font-30);
+}
+
+.roller span.selected {
+  height: 66px;
+  align-self: stretch;
+  justify-content: center;
+  border-radius: 16px;
+  background: var(--surface-hi);
+  color: var(--text);
+  font-size: var(--font-50);
+}
+
+.roller.small {
+  border-radius: 16px;
+}
+
+.roller.small span {
+  height: 38px;
+  font-size: var(--font-22);
+}
+
+.roller.small span.selected {
+  height: 48px;
+  border-radius: 12px;
+  font-size: var(--font-30);
+}

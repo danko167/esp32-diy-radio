@@ -1,0 +1,427 @@
+/* The radio's upload page, as a computer's browser shows it. Same colours
+   as the radio; the radio serves it gzipped, so keep it small and plain. */
+
+.web {
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 0 32px 48px;
+  font-size: 16px;
+}
+
+.web h2 {
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.web-dim {
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+.web-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 0;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--surface-hi);
+}
+
+.web-logo {
+  font-size: 22px;
+}
+
+.web-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #30d158;
+}
+
+.web section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.web-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.web-storage {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-hi);
+  overflow: hidden;
+}
+
+.web-storage span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.web-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 16px;
+}
+
+.web-thumb {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.web-thumb > span {
+  position: relative;
+  aspect-ratio: 1;
+  border: 1px solid var(--surface-hi);
+  border-radius: 16px;
+}
+
+.web-add {
+  cursor: pointer;
+  color: var(--text-dim);
+}
+
+.web-add > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-style: dashed;
+  font-size: 28px;
+}
+
+.web-add:hover > span {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.web-delete {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.web-delete:hover {
+  background: #ff453a;
+}
+
+/* Code */
+
+.web-lock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 80px 0;
+  text-align: center;
+}
+
+.web-code {
+  width: 220px;
+  padding: 12px;
+  border: 2px solid var(--surface-hi);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 40px;
+  letter-spacing: 16px;
+  text-align: center;
+}
+
+.web-code:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* Buttons */
+
+.web-primary,
+.web-secondary {
+  height: 44px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 22px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.web-primary {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.web-primary:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.web-secondary {
+  background: var(--surface-hi);
+  color: var(--text);
+}
+
+/* Cropping */
+
+.web-crop {
+  padding: 24px;
+  border-radius: 24px;
+  background: var(--surface);
+}
+
+.web-crop-body {
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.web-frame {
+  width: 360px;
+  height: 360px;
+  overflow: hidden;
+  border-radius: 16px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.web-frame:active {
+  cursor: grabbing;
+}
+
+.web-frame img {
+  display: block;
+  user-select: none;
+}
+
+.web-zoom {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  color: var(--text-dim);
+}
+
+.web-zoom input {
+  flex: 1;
+  accent-color: var(--accent);
+}
+
+.web-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* The radio's Home at 3/4 size */
+.web-preview-screen {
+  width: 360px;
+  height: 360px;
+  overflow: hidden;
+  border-radius: 18px;
+  box-shadow: 0 0 0 6px #050505;
+}
+
+.web-preview-screen > .home {
+  width: 480px;
+  height: 480px;
+  transform: scale(0.75);
+  transform-origin: top left;
+}
+
+.web-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.web-name {
+  margin-right: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-dim);
+}
+
+.web-name input {
+  width: 180px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--surface-hi);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.web-progress {
+  position: relative;
+  width: 260px;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--surface-hi);
+}
+
+.web-progress span {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+  background: var(--accent);
+}
+
+.web-progress em {
+  position: absolute;
+  right: 0;
+  top: 14px;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-style: normal;
+}
+
+.web-warn {
+  color: #ff453a;
+  font-size: 14px;
+}
+
+/* Favourite stations */
+
+.web-stations {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 18px;
+  border-radius: 20px;
+  background: var(--surface);
+}
+
+.web-station {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 60px;
+  border-bottom: 1px solid var(--surface-hi);
+}
+
+.web-station:last-child {
+  border-bottom: 0;
+}
+
+.web-station-n {
+  width: 32px;
+}
+
+.web-station-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.web-station-text div {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.web-station .web-delete {
+  position: static;
+  flex: none;
+}
+
+.web-add-station {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.web-input {
+  flex: 1;
+  min-width: 160px;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--surface-hi);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.web-url {
+  flex: 2;
+}
+
+/* Clock face thumbnails: the real face, shrunk */
+.web-face {
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.web-face > span {
+  display: block;
+  width: 480px;
+  height: 480px;
+  transform: scale(0.28);
+  transform-origin: top left;
+}
+
+.web-editable {
+  cursor: pointer;
+}
+
+.web-editable:hover {
+  border-color: var(--accent);
+}
+
+button.web-thumb {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+}
+
+/* Recordings: one row each */
+.web-recordings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.web-recording {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.web-recording .web-delete {
+  position: static;
+}
+
+.web-download {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  text-decoration: none;
+  font-size: 14px;
+}

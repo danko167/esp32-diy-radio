@@ -1,0 +1,176 @@
+/* Face editor, on the upload page */
+
+.fe-body {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+/* The face at 3/4 size; pieces are dragged on it */
+.fe-canvas {
+  width: 360px;
+  height: 360px;
+  flex: none;
+  overflow: hidden;
+  border-radius: 18px;
+  box-shadow: 0 0 0 6px #050505;
+  touch-action: none;
+}
+
+.fe-scaled {
+  width: 480px;
+  height: 480px;
+  transform: scale(0.75);
+  transform-origin: top left;
+}
+
+.fe-scaled .cfx-item {
+  cursor: grab;
+}
+
+.fe-panel {
+  flex: 1;
+  min-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.fe-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fe-group-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--accent);
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.fe-choices,
+.fe-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fe-choices > *,
+.fe-list button {
+  height: 36px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--surface-hi);
+  border-radius: 18px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.fe-choices .on,
+.fe-list .on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.fe-choices input[type='color'] {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.fe-list .fe-add {
+  border-style: dashed;
+  color: var(--text-dim);
+}
+
+.fe-remove {
+  border: 0;
+  background: none;
+  color: #ff453a;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.fe-field {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+.fe-field input[type='range'] {
+  accent-color: var(--accent);
+}
+
+.fe-input {
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--surface-hi);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+}
+
+.fe-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+.fe-toggle input {
+  accent-color: var(--accent);
+}
+
+.fe-swatches {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fe-swatches button {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.fe-swatches input[type='color'] {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.fe-swatches .on {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.fe-upload {
+  color: var(--accent);
+  font-size: 14px;
+  cursor: pointer;
+}

@@ -1,0 +1,248 @@
+.al-value {
+  flex: none;
+  max-width: 60%;
+  color: var(--accent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* List */
+
+.next-alarm {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px 12px 12px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.next-alarm.off {
+  background: var(--surface);
+  color: var(--text-dim);
+}
+
+.next-icon {
+  width: 50px;
+  height: 50px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.next-alarm.off .next-icon {
+  background: var(--surface-hi);
+  color: var(--text-dim);
+}
+
+.next-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.next-caption {
+  color: var(--accent);
+  font-size: var(--font-20);
+}
+
+.alarm-text {
+  min-width: 0;
+}
+
+.alarm-time {
+  font-size: var(--font-50);
+  line-height: 1.1;
+}
+
+.alarm-time.off {
+  color: var(--text-dim);
+}
+
+.alarm-detail {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-dim);
+  font-size: var(--font-20);
+}
+
+.day-letters {
+  display: flex;
+  gap: 6px;
+  color: #4a4a50;
+}
+
+.day-letters .on {
+  color: var(--accent);
+}
+
+.alarm-label {
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.al-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding-top: 40px;
+  color: var(--text-dim);
+}
+
+/* Editor */
+
+.time-pick {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.time-colon {
+  font-size: var(--font-50);
+  padding-bottom: 6px;
+}
+
+.al-ring-hint {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: var(--font-20);
+}
+
+.day-buttons {
+  display: flex;
+  justify-content: space-between;
+}
+
+.day-buttons button {
+  width: 58px;
+  height: 58px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-hi);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.day-buttons button.on {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.al-chips {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.al-chips.five {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.al-chips button {
+  height: 50px;
+  border: 2px solid var(--surface-hi);
+  border-radius: 24px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.al-chips button.on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.editor-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+/* Sound */
+
+.sound-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sound-group .card {
+  justify-content: flex-start;
+  padding: 14px 18px;
+}
+
+.sound-name {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Ringing */
+
+.ringing {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 24px 16px;
+  background: var(--bg);
+}
+
+.ring-label {
+  color: var(--accent);
+  font-size: var(--font-30);
+}
+
+.ring-clock {
+  font-size: var(--font-clock-140);
+  line-height: 1;
+  padding-top: 4px;
+}
+
+.ring-sound {
+  padding-bottom: 20px;
+  color: var(--text-dim);
+  font-size: var(--font-20);
+}
+
+.ring-snooze,
+.ring-stop {
+  width: 100%;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ring-snooze {
+  height: 106px;
+  border-radius: 32px;
+  background: var(--surface-hi);
+  color: var(--text);
+  font-size: var(--font-30);
+}
+
+.ring-stop {
+  height: 66px;
+  margin-top: 10px;
+  border-radius: 32px;
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.ring-hint {
+  margin-top: auto;
+  color: var(--text-dim);
+  font-size: var(--font-20);
+}

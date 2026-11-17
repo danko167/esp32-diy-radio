@@ -1,0 +1,208 @@
+/* Home (src/ui/screen_home.cpp) */
+
+.home {
+  position: relative;
+  height: 100%;
+}
+
+/* Close to src/ui/wallpaper.cpp's "Sunset"; the device renders its own */
+.wallpaper {
+  position: absolute;
+  inset: 0;
+}
+
+.wallpaper.sunset {
+  background:
+    radial-gradient(circle at 20% 100%, rgba(255, 94, 58, 0.85), transparent 62%),
+    radial-gradient(circle at 85% 95%, rgba(194, 31, 122, 0.9), transparent 58%),
+    radial-gradient(circle at 55% 115%, rgba(255, 160, 48, 0.7), transparent 52%),
+    #000;
+}
+
+.wifi {
+  position: absolute;
+  top: 16px;
+  right: 24px;
+}
+
+.clock {
+  position: absolute;
+  top: 40px;
+  width: 100%;
+  text-align: center;
+  font-size: var(--font-clock-96);
+  line-height: 70px;
+}
+
+.info .date {
+  color: #c8c8cc;
+}
+
+.info .weather-icon {
+  font-size: var(--font-30);
+  padding-left: 8px;
+}
+
+.info .alarm {
+  padding-left: 8px;
+}
+
+.tiles {
+  position: absolute;
+  left: 12px;
+  bottom: 16px;
+  width: 456px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* Frosted glass: dark and translucent so the wallpaper shows through */
+.tile {
+  width: 144px;
+  height: 122px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 28px;
+  background: rgba(0, 0, 0, 0.4);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.tile:active {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.tile .icon {
+  font-size: var(--font-50);
+}
+
+/* Home v2: on top of home.css (wallpaper, Wi-Fi icon, tile look) */
+
+.home2-battery {
+  position: absolute;
+  top: 16px;
+  left: 24px;
+}
+
+.home2-battery.low {
+  color: #ff453a;  /* theme::kRed */
+}
+
+.home2-clock {
+  position: absolute;
+  top: 96px;
+  width: 100%;
+  text-align: center;
+  font-size: var(--font-clock-96);
+  line-height: 70px;
+}
+
+.home2-info {
+  position: absolute;
+  top: 180px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.home2-info .date {
+  color: #c8c8cc;
+}
+
+.home2-info .weather-icon {
+  font-size: var(--font-30);
+  padding-left: 8px;
+}
+
+.home2-alarm {
+  position: absolute;
+  top: 222px;
+  width: 100%;
+  text-align: center;
+}
+
+/* One row of tiles, three to a page; only this scrolls (LVGL: a container
+   scrolling horizontally with snapping) */
+.home2-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 40px;
+  display: flex;
+  gap: 12px;
+  padding: 0 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 12px;
+  scrollbar-width: none;  /* none on the device either: LV_SCROLLBAR_MODE_OFF */
+}
+
+.home2-row::-webkit-scrollbar {
+  display: none;
+}
+
+.home2-row .tile {
+  flex: none;
+  height: 132px;
+  scroll-snap-align: start;
+}
+
+/* Every third tile starts a page: a page is the row's width, gaps included */
+.home2-row .tile:nth-child(3n + 1):not(:first-child) {
+  margin-left: 12px;
+}
+
+.home2-dots {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 16px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.home2-dots button {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+}
+
+.home2-dots button.on {
+  background: var(--text);
+}
+
+/* Wi-Fi top right, and the upload server's icon beside it while it's on */
+.home2-status {
+  position: absolute;
+  top: 16px;
+  right: 24px;
+  display: flex;
+  gap: 14px;
+}
+
+.home2-upload {
+  color: var(--accent);
+}
+
+a.home2-upload {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* Fills a short last page of tiles: takes the room, shows nothing */
+.home2-filler {
+  visibility: hidden;
+}

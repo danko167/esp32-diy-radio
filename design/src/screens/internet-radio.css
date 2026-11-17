@@ -1,0 +1,267 @@
+.ir-starred {
+  color: var(--accent);
+}
+
+
+/* Now Playing: fixed layout, nothing scrolls */
+
+.np {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 4px 4px 0;
+}
+
+.np-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.np-name {
+  font-size: var(--font-50);
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* On the device: LV_LABEL_LONG_SCROLL_CIRCULAR */
+.np-title {
+  min-height: 36px;
+  color: var(--accent);
+  font-size: var(--font-30);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.np-status {
+  color: var(--text-dim);
+  font-size: var(--font-20);
+}
+
+.np-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+}
+
+.np-play {
+  font-size: var(--font-30);
+}
+
+.np-volume {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.np-volume input {
+  flex: 1;
+  accent-color: var(--accent);
+}
+
+.np-percent {
+  width: 54px;
+  text-align: right;
+  color: var(--text-dim);
+}
+
+.np-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Stations */
+
+/* On the device: outside the scrolling list, so it stays put */
+.st-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  gap: 8px;
+  padding-bottom: 4px;
+  background: var(--bg);
+}
+
+.st-tabs button {
+  flex: 1;
+  height: 50px;
+  border: 0;
+  border-radius: 24px;
+  background: var(--surface-hi);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.st-tabs button.narrow {
+  flex: none;
+  width: 74px;
+}
+
+.st-tabs button.selected {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.presets {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* One per row, so names have room: the preset number, the station's badge,
+   then the name and what it streams */
+.preset {
+  height: 98px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 18px;
+  border: 2px solid transparent;
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.preset:active {
+  background: var(--surface-hi);
+}
+
+.preset.current {
+  border-color: var(--accent);
+}
+
+.preset .badge {
+  width: 54px;
+  height: 54px;
+  flex: none;
+}
+
+.preset-number {
+  width: 36px;
+  flex: none;
+  color: var(--text-dim);
+  font-size: var(--font-30);
+  text-align: center;
+}
+
+.preset.current .preset-number {
+  color: var(--accent);
+}
+
+.preset-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.preset-name {
+  font-size: var(--font-30);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.preset-detail {
+  color: var(--text-dim);
+  font-size: var(--font-22);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.preset.add {
+  height: 66px;
+  justify-content: center;
+  gap: 10px;
+  border: 2px dashed var(--surface-hi);
+  background: transparent;
+  color: var(--text-dim);
+}
+
+.st-row {
+  padding: 8px 18px 8px 8px;
+  gap: 14px;
+  user-select: none;
+}
+
+.badge {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: var(--font-20);
+}
+
+.st-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.st-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.st-detail {
+  color: var(--text-dim);
+  font-size: var(--font-20);
+}
+
+.mini {
+  height: 66px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 18px 0 8px;
+  border-radius: 32px;
+  background: var(--surface-hi);
+  cursor: pointer;
+}
+
+.mini-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.mini-name,
+.mini-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-title {
+  color: var(--accent);
+  font-size: var(--font-20);
+}
+
+/* Recently heard */
+
+.song-title {
+  line-height: 1.3;
+}
+
+.song-detail {
+  padding-top: 4px;
+  color: var(--text-dim);
+  font-size: var(--font-20);
+}
