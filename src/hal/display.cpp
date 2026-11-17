@@ -41,6 +41,23 @@ esp_lcd_panel_io_handle_t io;
 TouchDrvCST92xx touch;
 volatile bool touchIrq = false;
 uint8_t currentBrightness = 0;
+
+// The panel's orientation for each Rotation, and which way that turns the
+// picture against the panel: on its left side the picture must turn
+// clockwise, on its right anticlockwise. Normal is what Waveshare's examples
+// use; the turned ones are MADCTL's other mirror-free combinations a quarter
+// turn from it (checked on the radio, both sides). The touch mapping follows
+// `clockwise`.
+struct Orientation {
+    uint8_t madctl;
+    bool turned, clockwise;
+};
+const Orientation kOrientations[] = {
+    {0xA0, false, false},  // Normal
+    {0x00, true, true},    // Left: the picture turned clockwise
+    {0xC0, true, false},   // Right: anticlockwise
+};
+Rotation currentRotation = Rotation::Normal;
 uint32_t fakeTouchUntil = 0;
 int16_t fakeX = 0, fakeY = 0;
 int fakeReads = 0;  // touch reads left to report the simulated press
@@ -180,17 +197,30 @@ void readTouch(lv_indev_t *, lv_indev_data_t *data) {
     if (touchIrq || pressed) {
         touchIrq = false;
         const TouchPoints points = touch.getTouchPoints();
-        const bool was = pressed;
         pressed = points.hasPoints();
         if (pressed) {
             lastX = points.getPoint(0).x;
             lastY = points.getPoint(0).y;
         }
-        // Every real touch in the log, to catch presses nobody made (the panel's own)
-        if (pressed != was) Serial.printf("touch: %s at %d,%d\n", pressed ? "down" : "up", lastX, lastY);
     }
-    data->point.x = lastX;
-    data->point.y = lastY;
+    // Where the finger is on the picture: the panel reports it as if unturned
+    const Orientation &o = kOrientations[static_cast<int>(currentRotation)];
+    int16_t x = lastX, y = lastY;
+    if (o.turned && o.clockwise) {
+        x = lastY;
+        y = LCD_WIDTH - 1 - lastX;
+    } else if (o.turned) {
+        x = LCD_HEIGHT - 1 - lastY;
+        y = lastX;
+    }
+    // Every real touch in the log, to catch presses nobody made (the panel's own)
+    static bool logged = false;
+    if (pressed != logged) {
+        logged = pressed;
+        Serial.printf("touch: %s at %d,%d\n", pressed ? "down" : "up", x, y);
+    }
+    data->point.x = x;
+    data->point.y = y;
     data->state = pressed ? LV_INDEV_STATE_PRESSED : LV_INDEV_STATE_RELEASED;
 }
 
@@ -247,6 +277,15 @@ void setBrightness(uint8_t level) {
 }
 
 uint8_t brightness() { return currentBrightness; }
+
+void setRotation(Rotation r) {
+    if (r == currentRotation) return;
+    currentRotation = r;
+    // Queued after any pixels still on their way, so a frame never splits
+    setParam(kCmdMadctl, kOrientations[static_cast<int>(r)].madctl);
+}
+
+Rotation rotation() { return currentRotation; }
 
 void simulateTouch(int16_t x, int16_t y, uint32_t ms) {
     fakeX = x;

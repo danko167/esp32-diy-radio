@@ -4,7 +4,10 @@
 // - Four toggles: Wi-Fi, the radio (plays the last station / stops),
 //   the upload server (Settings > Display > Your picture) and the screen lock.
 //   Without Wi-Fi the radio and the upload server can't go on: dimmed.
-// - Brightness and volume
+// - Brightness, with the Rotate button after it: off by default, the motion
+//   sensor off with it. On, the screen follows the radio stood on its left or
+//   right side (charging from the side); off, it goes back to normal.
+// - Volume
 // On the device: a dark panel over a snapshot of the screen, nothing see-through.
 import { useRef, useState } from 'react'
 import { BigSlider } from '../components'
@@ -47,6 +50,7 @@ export default function ControlCenter({ start = 'closed', wifiOff = false }: {
   const [radio, setRadio] = useState(!wifiOff)
   const [upload, setUpload] = useState(false)
   const [lock, setLock] = useState(true)
+  const [rotate, setRotate] = useState(false)
   const [brightness, setBrightness] = useState(70)
   const [volume, setVolume] = useState(40)
 
@@ -94,7 +98,11 @@ export default function ControlCenter({ start = 'closed', wifiOff = false }: {
           <Toggle icon={symbol.lock} label="Lock" state={lock ? 'On' : 'Off'} on={lock}
                   onClick={() => setLock(!lock)} />
         </div>
-        <BigSlider value={brightness} min={2} icon={symbol.sun} onChange={setBrightness} />
+        <div className="cc-beside">
+          <BigSlider value={brightness} min={2} icon={symbol.sun} onChange={setBrightness} />
+          <button className={`cc-round icon${rotate ? ' on' : ''}`} onClick={() => setRotate(!rotate)}
+                  title={rotate ? 'Rotate: auto' : 'Rotate: off'}>{symbol.refresh}</button>
+        </div>
         <BigSlider value={volume} icon={volume === 0 ? symbol.mute : symbol.volumeMax} onChange={setVolume} />
         <div className="cc-handle" />
       </div>

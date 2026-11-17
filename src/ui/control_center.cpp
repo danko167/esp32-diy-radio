@@ -39,6 +39,8 @@ struct ToggleView {
 };
 ToggleView toggles[kToggles];
 lv_obj_t *volumeSlider;
+lv_obj_t *rotateButton;  // after the brightness bar
+int shownRotate = -1;
 bool syncingVolume = false;  // tick() showing the buttons' change, not a drag
 
 void onToggle(lv_event_t *e) {
@@ -118,6 +120,13 @@ void tick(lv_timer_t *) {
     const bool lock = settings::get().screenLock;
     showToggle(kLock, lock, false, lock ? "On" : "Off");
 
+    const bool rotate = settings::get().autoRotate;
+    if ((int)rotate != shownRotate) {
+        shownRotate = rotate;
+        lv_obj_set_style_bg_color(rotateButton, lv_color_hex(rotate ? theme::accent() : theme::kSurfaceHi), 0);
+        lv_obj_set_style_text_color(lv_obj_get_child(rotateButton, 0), lv_color_hex(rotate ? theme::kBg : theme::kText), 0);
+    }
+
     // The side buttons change the volume meanwhile
     if (lv_slider_get_value(volumeSlider) != radio::volume() && !lv_obj_has_state(volumeSlider, LV_STATE_PRESSED)) {
         lv_slider_set_value(volumeSlider, radio::volume(), LV_ANIM_OFF);
@@ -150,14 +159,25 @@ lv_obj_t *createControlCenter() {
     addToggle(grid, kUpload, LV_SYMBOL_UPLOAD, "Upload");
     addToggle(grid, kLock, SYM_LOCK, "Lock");
 
+    // Brightness, and the auto-rotate button after it, as tall as the bar
+    lv_obj_t *brightRow = addRow(scr, 12);
     auto toPercent = [](uint8_t level) { return (level * 100 + 127) / 255; };
-    lv_obj_t *bright = addBigSlider(scr, 2, 100, toPercent(settings::get().brightness), SYM_SUN, [](lv_event_t *e) {
+    lv_obj_t *bright = addBigSlider(brightRow, 2, 100, toPercent(settings::get().brightness), SYM_SUN, [](lv_event_t *e) {
         const int percent = lv_slider_get_value(lv_event_get_target_obj(e));
         settings::get().brightness = (percent * 255 + 50) / 100;
         display::setBrightness(settings::get().brightness);
         settings::changed();
     });
     lv_obj_set_height(bright, kSliderHeight);
+    lv_obj_set_width(bright, 0);
+    lv_obj_set_flex_grow(bright, 1);
+    rotateButton = addRoundButton(brightRow, kSliderHeight, LV_SYMBOL_REFRESH, false, [](lv_event_t *) {
+        settings::get().autoRotate = !settings::get().autoRotate;
+        settings::changed();
+        tick(nullptr);
+    });
+    lv_obj_set_style_text_font(lv_obj_get_child(rotateButton, 0), &font_ui_30, 0);
+    shownRotate = -1;
     volumeSlider = addBigSlider(scr, 0, 100, radio::volume(), LV_SYMBOL_VOLUME_MAX, [](lv_event_t *e) {
         if (!syncingVolume) radio::setVolume(lv_slider_get_value(lv_event_get_target_obj(e)));
     });

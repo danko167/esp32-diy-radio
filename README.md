@@ -84,6 +84,9 @@ hobby project, so expect some rough edges.
 
 - Swipe down from the top edge, on Home or in any app, for the control centre:
   Wi-Fi, Radio, Upload and Lock toggles, plus brightness and volume.
+- Auto-rotate (the round button after brightness): stand the radio on its left
+  or right side, say to charge it with the cable out of the way, and the screen
+  turns to match. Off by default; the motion sensor only runs while it's on.
 - Wi-Fi can be switched off completely (remembered across restarts); recordings
   and card files still play.
 - Up to five saved Wi-Fi networks; the radio joins the strongest one in range.

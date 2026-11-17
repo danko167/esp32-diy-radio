@@ -4,6 +4,14 @@ All notable changes to this project are listed here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] – 2026-11-17
+
+### Added
+
+- Auto-rotate: a button in the control centre. Stand the radio on its left or
+  right side and the screen turns to match; off by default, and the motion
+  sensor only runs while it's on.
+
 ## [0.1.0] – 2026-11-17
 
 First public release.
@@ -37,4 +45,5 @@ First public release.
 - Updates over the USB cable (with progress on screen) or over Wi-Fi (OTA).
 - FM Radio and Bluetooth tiles are placeholders for now.
 
+[0.2.0]: https://github.com/danko167/esp32-diy-radio/releases/tag/v0.2.0
 [0.1.0]: https://github.com/danko167/esp32-diy-radio/releases/tag/v0.1.0

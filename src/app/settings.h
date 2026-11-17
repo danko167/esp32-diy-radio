@@ -47,6 +47,8 @@ struct Settings {
     // reads when the radio stands level (left to right, front to back)
     int16_t levelOffsetX = 0;
     int16_t levelOffsetY = 0;
+    // After v6's end, so v6 saves load it off
+    bool autoRotate = false;  // the screen follows the radio stood on its left or right side
 };
 
 // settings' nightColour, Red for anything it doesn't know

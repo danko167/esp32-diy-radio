@@ -126,3 +126,32 @@
   background: rgba(255, 255, 255, 0.35);
   pointer-events: none;
 }
+
+/* Rotate: a round button after the brightness bar, as tall */
+.cc-beside {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.cc-beside .big-slider {
+  flex: 1;
+  min-width: 0;
+}
+
+.cc-round {
+  flex: none;
+  width: 70px;
+  height: 70px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-hi);
+  color: var(--text);
+  font-size: var(--font-30);
+  cursor: pointer;
+}
+
+.cc-round.on {
+  background: var(--accent);
+  color: #000;
+}

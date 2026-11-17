@@ -10,6 +10,7 @@
 #include "audio/recorder.h"
 #include "hal/buttons.h"
 #include "hal/display.h"
+#include "hal/imu.h"
 #include "hal/pins.h"
 #include "hal/power.h"
 #include "hal/rtc.h"
@@ -554,6 +555,79 @@ void switchOff() {
 
 // Each change of level once; Low's notice again every so often. Never during
 // a firmware update: the chip's own cut-off is further down, the update can finish.
+// Auto-rotate (the control centre's button, off by default): the screen
+// follows the radio stood on its left or right side, to charge it from the
+// side and still see the clock. The motion sensor is on only for this (or the
+// Level). The Level always shows the normal way round.
+constexpr uint32_t kRotateCheckMs = 200;
+constexpr int kRotateSteadyChecks = 5;  // a second on the new side before it turns
+constexpr float kRotateG = 0.75f;       // the side down carries most of gravity
+constexpr uint32_t kRotateDipMs = 120;
+constexpr uint32_t kRotateRiseMs = 250;
+bool rotateUsesSensor = false;  // the sensor is on for this, not the Level
+display::Rotation rotateSeen = display::Rotation::Normal;
+int rotateSeenFor = 0;
+display::Rotation rotateTo = display::Rotation::Normal;
+uint8_t rotateBack = 0;  // the brightness to rise to again
+
+// Which way the radio stands, from the sensor's "up" in the screen's axes
+// (upright: y = 1; on its left side, up points to the screen's right: x = 1).
+// Lying flat or in between: as it is now.
+display::Rotation standing(float x, float y) {
+    if (x > kRotateG) return display::Rotation::Left;
+    if (x < -kRotateG) return display::Rotation::Right;
+    if (y > kRotateG) return display::Rotation::Normal;
+    return display::rotation();
+}
+
+void applyRotation() {
+    display::setRotation(rotateTo);
+    lv_obj_invalidate(lv_screen_active());
+    lv_obj_invalidate(lv_layer_top());
+}
+
+// Through black like waking, so the turn is a cut, not a redraw sweeping across
+void turnScreen(display::Rotation r) {
+    rotateTo = r;
+    rotateBack = display::brightness();
+    if (!rotateBack) return applyRotation();  // the screen is off: nothing to hide
+    fadeBrightness(0, kRotateDipMs, [](lv_anim_t *) {
+        applyRotation();
+        lv_refr_now(nullptr);  // the whole turned picture before it rises
+        fadeBrightness(rotateBack, kRotateRiseMs);
+    });
+}
+
+void checkRotation(lv_timer_t *) {
+    // Not over another fade (waking, the clock screen) or a slide: next time
+    if (transition || waking || updatePanel || emptyPanel || lv_anim_get(&brightnessAnimVar, nullptr)) return;
+    const bool level = appScreen && currentApp == App::Level;
+    if (!settings::get().autoRotate || level || !imu::present()) {
+        // The Level has the sensor to itself while it's open, and stops it when it closes
+        if (rotateUsesSensor && !level) imu::stop();
+        rotateUsesSensor = false;
+        rotateSeenFor = 0;
+        if (display::rotation() != display::Rotation::Normal) turnScreen(display::Rotation::Normal);
+        return;
+    }
+    if (!imu::running()) {
+        imu::start();
+        rotateUsesSensor = true;
+        return;
+    }
+    float x, y, z;
+    if (!imu::read(x, y, z)) return;
+    const display::Rotation side = standing(x, y);
+    if (side != rotateSeen) {
+        rotateSeen = side;
+        rotateSeenFor = 0;
+    }
+    if (side != display::rotation() && ++rotateSeenFor >= kRotateSteadyChecks) {
+        rotateSeenFor = 0;
+        turnScreen(side);
+    }
+}
+
 void checkBattery(lv_timer_t *) {
     static power::Level handled = power::Level::Ok;
     static uint32_t lowShownAt = 0;
@@ -590,6 +664,7 @@ void begin() {
     lv_timer_create(tickClocks, 250, nullptr);
     lv_timer_create(checkRinging, 250, nullptr);
     lv_timer_create(checkBattery, 1000, nullptr);
+    lv_timer_create(checkRotation, kRotateCheckMs, nullptr);
     buttons::begin(onButton, nullptr);  // no double presses anywhere
 
     // A swipe down from the top edge, anywhere but the clock screen, opens the
