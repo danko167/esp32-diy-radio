@@ -14,6 +14,7 @@
 #include "app/version.h"
 #include "app/watchdog.h"
 #include "hal/display.h"
+#include "hal/light.h"
 #include "hal/power.h"
 #include "hal/rtc.h"
 #include "net/weather.h"
@@ -322,9 +323,22 @@ void openDisplay(lv_obj_t *screen) {
     addSection(body, "BRIGHTNESS");
     addBigSlider(body, 5, 100, toPercent(settings::get().brightness), SYM_SUN, [](lv_event_t *e) {
         settings::get().brightness = toLevel(lv_slider_get_value(lv_event_get_target_obj(e)));
-        display::setBrightness(settings::get().brightness);
+        display::setBrightness(ui::brightnessFor(settings::get().brightness));
         settings::changed();
     });
+    // The light sensor's: both brightness levels are then for a normally lit room
+    if (light::present()) {
+        switchCard(body, "Automatic brightness", settings::get().autoBrightness, [](lv_event_t *e) {
+            settings::get().autoBrightness = checked(e);
+            settings::changed();
+        });
+        addHint(body, "Follows the room: dimmer in the dark, brighter in daylight. The bar sets it for a "
+                      "normally lit room.");
+    } else {
+        lv_obj_t *card = addCard(body, "Automatic brightness", false);
+        addText(card, "No sensor", &font_ui_22, theme::kTextDim);
+        addHint(body, "Needs a BH1750 light sensor on the radio's I2C bus.");
+    }
 
     addSection(body, "WALLPAPER");
     lv_obj_t *grid = lv_obj_create(body);
@@ -631,14 +645,17 @@ void openClockScreen(lv_obj_t *screen) {
     addSection(body, "BRIGHTNESS");
     lv_obj_t *dim = addBigSlider(body, 2, 100, toPercent(s.ambientBrightness), SYM_MOON, [](lv_event_t *e) {
         settings::get().ambientBrightness = toLevel(lv_slider_get_value(lv_event_get_target_obj(e)));
-        display::setBrightness(settings::get().ambientBrightness);
+        display::setBrightness(ui::brightnessFor(settings::get().ambientBrightness, true));
         settings::changed();
     });
     for (lv_event_code_t code : {LV_EVENT_RELEASED, LV_EVENT_PRESS_LOST}) {
-        lv_obj_add_event_cb(dim, [](lv_event_t *) { display::setBrightness(settings::get().brightness); }, code,
+        lv_obj_add_event_cb(dim, [](lv_event_t *) { display::setBrightness(ui::brightnessFor(settings::get().brightness)); }, code,
                             nullptr);
     }
-    addHint(body, "The screen dims to this while you drag, so you see it for real.");
+    addHint(body, settings::get().autoBrightness && light::present()
+                      ? "For a normally lit room: in the dark it goes dimmer, never off, so the time stays "
+                        "readable. The screen dims to this while you drag."
+                      : "The screen dims to this while you drag, so you see it for real.");
 
     switchCard(body, "Show seconds", s.ambientSeconds, [](lv_event_t *e) {
         settings::get().ambientSeconds = checked(e);

@@ -49,6 +49,9 @@ struct Settings {
     int16_t levelOffsetY = 0;
     // After v6's end, so v6 saves load it off
     bool autoRotate = false;  // the screen follows the radio stood on its left or right side
+    // Since v7, in v6's padding (see load()): both brightness levels are then
+    // for a normally lit room, adjusted to the light sensor's reading
+    bool autoBrightness = false;
 };
 
 // settings' nightColour, Red for anything it doesn't know

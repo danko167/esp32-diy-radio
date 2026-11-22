@@ -73,13 +73,16 @@ const signalWord = (rssi: number) =>
         ? "weak"
         : "very weak";
 
-function useSettings(wifiState: WiFiState) {
+function useSettings(wifiState: WiFiState, autoStart: boolean, lightSensor: boolean) {
   const [wifi, setWifi] = useState<string | null>(wifiState === "off" ? null : "HomeNet");
   // Wi-Fi off: the saved networks stay, and it joins one again when it's back on
   const [wifiOn, setWifiOn] = useState(true);
   // Up to 5, most recently used first, like a phone: the strongest one in range joins
   const [saved, setSaved] = useState(["HomeNet", "My phone", "Office"]);
   const [brightness, setBrightness] = useState(70);
+  // Follows the room (the BH1750 light sensor): both brightness settings are
+  // then for a normally lit room, dimmer in the dark, brighter in daylight
+  const [autoBrightness, setAutoBrightness] = useState(autoStart && lightSensor);
   const [wallpaper, setWallpaper] = useState(2);
   const [ambientMode, setAmbientMode] = useState<AmbientMode>("weather");
   const [ambientTimeout, setAmbientTimeout] = useState(60);
@@ -114,6 +117,9 @@ function useSettings(wifiState: WiFiState) {
     wifiConnecting: wifiState === "connecting",
     brightness,
     setBrightness,
+    autoBrightness,
+    setAutoBrightness,
+    lightSensor,
     wallpaper,
     setWallpaper,
     ambientMode,
@@ -148,14 +154,20 @@ type S = ReturnType<typeof useSettings>;
 type Go = (page: SettingsPage) => void;
 
 // `wifi`: how Wi-Fi is doing (the upload page needs it)
+// `autoBrightness`: starts with it on; `lightSensor`: false for a radio
+// without the BH1750 (the switch can't go on)
 export default function Settings({
   start = "main",
   wifi = "connected",
+  autoBrightness = false,
+  lightSensor = true,
 }: {
   start?: SettingsPage;
   wifi?: WiFiState;
+  autoBrightness?: boolean;
+  lightSensor?: boolean;
 }) {
-  const s = useSettings(wifi);
+  const s = useSettings(wifi, autoBrightness, lightSensor);
   const [page, setPage] = useState<SettingsPage>(start);
   switch (page) {
     case "wifi":
@@ -383,6 +395,18 @@ function Display({ s, go }: { s: S; go: Go }) {
         icon={symbol.sun}
         onChange={s.setBrightness}
       />
+      <Card title="Automatic brightness">
+        {s.lightSensor
+          ? <Switch on={s.autoBrightness} onChange={s.setAutoBrightness} />
+          : <span className="dim">No sensor</span>}
+      </Card>
+      <Hint>
+        {!s.lightSensor
+          ? "Needs a BH1750 light sensor on the radio's I2C bus."
+          : s.autoBrightness
+            ? "Follows the room: dimmer in the dark, brighter in daylight. The bar sets it for a normally lit room."
+            : "The screen follows the room, dimmer in the dark and brighter in daylight."}
+      </Hint>
 
       <Section>WALLPAPER</Section>
       <div className="wallpapers">
@@ -568,7 +592,9 @@ function ClockScreen({ s, go }: { s: S; go: Go }) {
         onChange={s.setAmbientBrightness}
       />
       <Hint>
-        The screen dims to this while you drag, so you see it for real.
+        {s.autoBrightness
+          ? "For a normally lit room: in the dark it goes dimmer, never off, so the time stays readable. The screen dims to this while you drag."
+          : "The screen dims to this while you drag, so you see it for real."}
       </Hint>
 
       <Card title="Show seconds">

@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <lvgl.h>
+#include <math.h>
 
 #include "app/alarms.h"
 #include "app/radio.h"
@@ -10,7 +11,9 @@
 #include "audio/recorder.h"
 #include "hal/buttons.h"
 #include "hal/display.h"
+#include "hal/encoder.h"
 #include "hal/imu.h"
+#include "hal/light.h"
 #include "hal/pins.h"
 #include "hal/power.h"
 #include "hal/rtc.h"
@@ -206,7 +209,7 @@ void enterAmbient() {
             ccScreen = nullptr;
         }
         if (s.ambientMode != settings::AmbientMode::ScreenOff) {
-            fadeBrightness(s.ambientBrightness, kAmbientRiseMs);
+            fadeBrightness(brightnessFor(s.ambientBrightness, true), kAmbientRiseMs);
         }
     });
 }
@@ -239,7 +242,7 @@ void showRinging(const alarms::Alarm &a) {
         screens::hideAmbient();
     }
     lv_anim_delete(&brightnessAnimVar, nullptr);
-    display::setBrightness(settings::get().brightness);
+    display::setBrightness(brightnessFor(settings::get().brightness));
 
     ringPanel = lv_obj_create(lv_layer_top());
     lv_obj_remove_style_all(ringPanel);
@@ -412,6 +415,28 @@ void showVolume(int v) {
 void changeVolume(int delta) {
     radio::setVolume(radio::volume() + delta);
     showVolume(radio::volume());
+}
+
+// The rotary encoder: turning is the volume, a press the radio on or off,
+// everywhere. While an alarm rings, a press snoozes it and a long press stops
+// it. On the clock screen it works without waking it: no light at night.
+constexpr int kEncoderVolumeStep = 2;  // a knob has many clicks, the buttons few
+
+void checkEncoder(lv_timer_t *) {
+    const int steps = encoder::takeSteps();
+    const bool press = encoder::takePress(), hold = encoder::takeLongPress();
+    if ((!steps && !press && !hold) || emptyPanel || updatePanel) return;
+    if (alarms::ringing()) {
+        if (hold) {
+            alarms::dismiss();
+        } else if (press) {
+            alarms::snooze();
+        }
+        return;
+    }
+    if (!inAmbient) lv_display_trigger_activity(lv_display_get_default());  // using it counts as being here
+    if (steps) changeVolume(steps * kEncoderVolumeStep);
+    if (press) radio::togglePlay();
 }
 
 // Left and right: volume (held: keeps going). Middle depends on where you are.
@@ -628,6 +653,50 @@ void checkRotation(lv_timer_t *) {
     }
 }
 
+// Automatic brightness (Settings > Display): the light sensor's reading,
+// smoothed over a couple of seconds in steps of brightness (a log scale, as
+// eyes see it), so a hand passing over it changes nothing
+constexpr uint32_t kLightCheckMs = 500;
+constexpr float kLightSmoothing = 0.25f;  // of the difference, each reading
+constexpr uint32_t kLightFadeMs = 1000;
+float roomLight = -1;  // log10(lux + 1), smoothed; -1 before the first reading
+bool autoShown = false;  // the panel's level was the adjusted one at the last look
+
+// As a factor on a setting: 1 in a normally lit room (40 to 300 lux), down to
+// 0.2 in the dark, up to 2 in daylight (3000 lux and more)
+float roomFactor() {
+    constexpr float kDark = 0, kRoom = 1.61f, kBright = 2.48f, kDaylight = 3.48f;  // 0, 40, 300, 3000 lux
+    if (roomLight < kRoom) return 0.2f + 0.8f * LV_MAX(roomLight - kDark, 0.0f) / (kRoom - kDark);
+    if (roomLight < kBright) return 1;
+    return 1 + LV_MIN((roomLight - kBright) / (kDaylight - kBright), 1.0f);
+}
+
+bool autoBrightnessOn() { return settings::get().autoBrightness && light::present() && roomLight >= 0; }
+
+// What the panel should show now: home and the apps, or the clock screen
+uint8_t brightnessNow() {
+    const auto &s = settings::get();
+    if (!inAmbient) return brightnessFor(s.brightness);
+    return s.ambientMode == settings::AmbientMode::ScreenOff ? 0 : brightnessFor(s.ambientBrightness, true);
+}
+
+void checkLight(lv_timer_t *) {
+    float lux;
+    if (!light::present() || !light::read(lux)) return;
+    const float now = log10f(lux + 1);
+    roomLight = roomLight < 0 ? now : roomLight + (now - roomLight) * kLightSmoothing;
+
+    const bool on = autoBrightnessOn();
+    if (!on && !autoShown) return;  // off, and already at the plain settings
+    // Not over another fade, a slide, the ringing alarm or the panels
+    if (transition || waking || updatePanel || emptyPanel || ringPanel || lv_anim_get(&brightnessAnimVar, nullptr)) {
+        return;
+    }
+    autoShown = on;
+    const int want = brightnessNow(), shown = display::brightness();
+    if (abs(want - shown) >= LV_MAX(2, shown / 20)) fadeBrightness(want, kLightFadeMs);
+}
+
 void checkBattery(lv_timer_t *) {
     static power::Level handled = power::Level::Ok;
     static uint32_t lowShownAt = 0;
@@ -658,13 +727,15 @@ void begin() {
 
     // Fade in at boot instead of popping on
     display::setBrightness(0);
-    fadeBrightness(settings::get().brightness, 600);
+    fadeBrightness(brightnessFor(settings::get().brightness), 600);
 
     lv_timer_create(checkInactivity, 500, nullptr);
     lv_timer_create(tickClocks, 250, nullptr);
     lv_timer_create(checkRinging, 250, nullptr);
     lv_timer_create(checkBattery, 1000, nullptr);
     lv_timer_create(checkRotation, kRotateCheckMs, nullptr);
+    lv_timer_create(checkEncoder, 20, nullptr);
+    lv_timer_create(checkLight, kLightCheckMs, nullptr);
     buttons::begin(onButton, nullptr);  // no double presses anywhere
 
     // A swipe down from the top edge, anywhere but the clock screen, opens the
@@ -795,7 +866,7 @@ void wake() {
     lv_display_trigger_activity(lv_display_get_default());
     auto rise = [](lv_anim_t *) {
         finishWake();
-        fadeBrightness(settings::get().brightness, kWakeRiseMs);
+        fadeBrightness(brightnessFor(settings::get().brightness), kWakeRiseMs);
     };
     if (display::brightness() == 0) {  // the clock screen is off: nothing to dip
         rise(nullptr);
@@ -808,7 +879,7 @@ void unlockShown(bool shown) {
     if (shown) setCpuMhz(kFullMhz);  // the knob follows the finger smoothly
     const auto &s = settings::get();
     if (inAmbient && !ringPanel && s.ambientMode == settings::AmbientMode::ScreenOff) {
-        fadeBrightness(shown ? s.ambientBrightness : 0, kWakeMs);
+        fadeBrightness(shown ? brightnessFor(s.ambientBrightness, true) : 0, kWakeMs);
     }
 }
 
@@ -816,6 +887,13 @@ void applySettings() {
     screens::refreshHome();
     screens::refreshAmbient();
     applyPerfOverlay();
+}
+
+uint8_t brightnessFor(uint8_t setting, bool clockScreen) {
+    if (!autoBrightnessOn()) return setting;
+    // Never off in the dark: the clock stays readable, home stays usable
+    const int lowest = clockScreen ? 4 : 13;
+    return LV_CLAMP(lowest, (int)lroundf(setting * roomFactor()), 255);
 }
 
 void printState() {
@@ -855,7 +933,7 @@ void showUpdateProgress(int percent) {
     }
     if (!panel) {
         setCpuMhz(kFullMhz);  // from the clock screen at 80 MHz, a cable update took twice as long
-        display::setBrightness(settings::get().brightness);  // even from the ambient screen
+        display::setBrightness(brightnessFor(settings::get().brightness));  // even from the ambient screen
         panel = lv_obj_create(lv_layer_top());
         lv_obj_remove_style_all(panel);
         lv_obj_set_size(panel, LV_PCT(100), LV_PCT(100));

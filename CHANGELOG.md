@@ -4,6 +4,17 @@ All notable changes to this project are listed here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] – 2026-11-22
+
+### Added
+
+- Automatic brightness, with a BH1750 light sensor (Settings > Display): both
+  brightness settings become the level for a normally lit room, dimmer in the
+  dark (the clock screen never off) and brighter in daylight.
+- Rotary encoder support, on an MCP23017 I/O expander: turning is the volume, a
+  press the radio on or off, and while an alarm rings a press snoozes and a long
+  press stops it. It works on the clock screen without waking it.
+
 ## [0.2.0] – 2026-11-17
 
 ### Added
@@ -45,5 +56,6 @@ First public release.
 - Updates over the USB cable (with progress on screen) or over Wi-Fi (OTA).
 - FM Radio and Bluetooth tiles are placeholders for now.
 
+[0.3.0]: https://github.com/danko167/esp32-diy-radio/releases/tag/v0.3.0
 [0.2.0]: https://github.com/danko167/esp32-diy-radio/releases/tag/v0.2.0
 [0.1.0]: https://github.com/danko167/esp32-diy-radio/releases/tag/v0.1.0

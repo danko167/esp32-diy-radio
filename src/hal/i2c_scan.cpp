@@ -15,6 +15,7 @@ constexpr uint32_t kBusHz = 400000;  // what main.cpp starts the bus at
 const char *knownName(uint8_t address) {
     switch (address) {
         case 0x18: return "ES8311 speaker codec";
+        case 0x23: return "BH1750 light sensor (or an MCP23017)";
         case 0x34: return "AXP2101 power chip";
         case 0x40: return "ES7210 mics";
         case 0x51: return "PCF85063 clock";

@@ -49,6 +49,11 @@ hobby project, so expect some rough edges.
   Night and Segment come in red or green. Every face moves a few pixels each
   minute to protect the AMOLED from burn-in.
 
+- Optional rotary encoder (on an MCP23017 I/O expander at 0x20, see
+  `src/hal/encoder.h`): turning is the volume, a press the radio on or off; while
+  an alarm rings, a press snoozes and a long press stops it. On the clock screen
+  it works without waking it.
+
 ### Weather
 
 - Current conditions, the next 24 hours, the next days and details (feels like,
@@ -72,6 +77,9 @@ hobby project, so expect some rough edges.
 
 - Wallpapers: six built-in designs, or your own pictures sent from the upload page.
 - Accent colour: eight to pick from in Settings > Display, applied everywhere.
+- Automatic brightness, with an optional BH1750 light sensor on the I2C bus
+  (Settings > Display): the screen and the clock screen follow the room, dimmer
+  in the dark (never off) and brighter in daylight.
 - Clock faces from the card: design your own on the upload page (background
   picture, time, date, next alarm, weather, an analog clock, text, and your own
   fonts), then pick it in Settings > Clock screen > Face.
@@ -195,15 +203,15 @@ Python, which needs `python -m pip install --user pyserial esptool` once.)
 **From a release**, without building: each
 [GitHub Release](https://github.com/danko167/esp32-diy-radio/releases) has
 
-- `esp32-diy-radio-v0.1.0-full.bin`, the whole flash image for a blank board:
+- `esp32-diy-radio-vX.Y.Z-full.bin`, the whole flash image for a blank board:
 
   ```sh
-  esptool.py --chip esp32s3 write_flash 0x0 esp32-diy-radio-v0.1.0-full.bin
+  esptool.py --chip esp32s3 write_flash 0x0 esp32-diy-radio-vX.Y.Z-full.bin
   ```
 
-- `esp32-diy-radio-v0.1.0.bin`, the firmware alone, for updating a radio that
+- `esp32-diy-radio-vX.Y.Z.bin`, the firmware alone, for updating a radio that
   already runs it, for example over the cable with
-  `python tools/usb_update.py <port> esp32-diy-radio-v0.1.0.bin`.
+  `python tools/usb_update.py <port> esp32-diy-radio-vX.Y.Z.bin`.
 
 The full image replaces the board's factory demo and its partition table.
 

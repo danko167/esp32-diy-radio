@@ -28,4 +28,9 @@ void showUpdateProgress(int percent);
 
 void printState();  // for the dev console
 
+// The panel's level for a brightness setting (settings' brightness or
+// ambientBrightness): the setting itself, or with automatic brightness on,
+// adjusted to the room. `clockScreen` lets it go lower in the dark.
+uint8_t brightnessFor(uint8_t setting, bool clockScreen = false);
+
 }  // namespace ui

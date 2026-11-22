@@ -165,7 +165,7 @@ lv_obj_t *createControlCenter() {
     lv_obj_t *bright = addBigSlider(brightRow, 2, 100, toPercent(settings::get().brightness), SYM_SUN, [](lv_event_t *e) {
         const int percent = lv_slider_get_value(lv_event_get_target_obj(e));
         settings::get().brightness = (percent * 255 + 50) / 100;
-        display::setBrightness(settings::get().brightness);
+        display::setBrightness(ui::brightnessFor(settings::get().brightness));
         settings::changed();
     });
     lv_obj_set_height(bright, kSliderHeight);

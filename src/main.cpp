@@ -14,8 +14,10 @@
 #include "audio/tones.h"
 #include "hal/buttons.h"
 #include "hal/display.h"
+#include "hal/encoder.h"
 #include "hal/i2c_scan.h"
 #include "hal/imu.h"
+#include "hal/light.h"
 #include "hal/pins.h"
 #include "hal/power.h"
 #include "hal/rtc.h"
@@ -47,6 +49,8 @@ void setup() {
     if (!rtc::begin()) Serial.println("Clock not set");
     power::begin();
     imu::begin();
+    encoder::begin();  // nothing without the I/O expander
+    light::begin();    // nor without the light sensor
 
     storage::begin();
     tones::begin();
@@ -83,7 +87,8 @@ static void timeFullRedraw() {
 // S<dy> = scroll what's under the middle of the screen by dy pixels (positive: further down), A = add an alarm a minute from now,
 // < > ^ = press the left, right or middle button, 0-9 = hide/show that child of the screen,
 // R = record Voice, or stop (M: record Music), g = the motion sensor's readings (its own axes and the screen's),
-// I = I2C scan at 100 kHz (an MCP23017 found gets a few of its registers read),
+// I = I2C scan at 100 kHz (an MCP23017 found gets a few of its registers read), E = log the rotary encoder on/off,
+// L = the light sensor's reading,
 // B<mV> = pretend the battery reads that (2500..4500), on battery without USB: B3400 is low 10 s later, B3200
 // empty (the screen and the saving, but it stays on while pretending), B0 = the real battery again
 
@@ -202,6 +207,19 @@ static void devConsole() {
                 break;
             }
             case 'I': i2c_scan::run(); break;
+            case 'L': {
+                float lux;
+                if (light::read(lux)) {
+                    Serial.printf("light: %.1f lux\n", lux);
+                } else {
+                    Serial.println("light: no reading");
+                }
+                break;
+            }
+            case 'E':
+                encoder::setLogging(!encoder::logging());
+                Serial.printf("encoder: logging %s\n", encoder::logging() ? "on" : "off");
+                break;
             case 'g': {  // started for the moment when the Level isn't open
                 const bool wasOn = imu::running();
                 imu::start();

@@ -11,8 +11,9 @@ constexpr char kNamespace[] = "radio";
 constexpr char kKey[] = "settings";
 // 2: added volume. 3: performance overlay off by default. 4: nightColour, in v3's padding.
 // 5: homeTiles with the Recorder, at the end. 6: the Level in homeTiles (in
-// v5's padding), screenLock and the Level's offsets after it
-constexpr uint32_t kVersion = 6;
+// v5's padding), screenLock and the Level's offsets after it. 7: autoBrightness,
+// in v6's padding (autoRotate came after v6's end, needing no new version)
+constexpr uint32_t kVersion = 7;
 constexpr uint32_t kSaveDelayMs = 3000;
 
 // v5 saves end with homeTiles' first 7 bytes and a padding byte: the Level's
@@ -55,6 +56,9 @@ void load() {
         prefs.getBytes(kKey, &stored, length) == length) {
         if (stored.version == kVersion || stored.version == 4) {
             current = stored.values;
+        } else if (stored.version == 6) {
+            current = stored.values;
+            current.autoBrightness = false;  // was padding, so it can hold junk
         } else if (stored.version == 5) {
             current = stored.values;
             // The Level, just before Settings in the order chosen (its byte was padding)
